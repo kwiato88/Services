@@ -33,7 +33,7 @@ void AddrRegister::AddrPool::allocate(const Addr& p_addr)
 		throw std::runtime_error(std::string("Host: ") + p_addr.host + ", Port: " + p_addr.port + " not available in pool");
 	free.erase(found);
 }
-void AddrRegister::AddrPool::release(const Addr& p_addr)
+void AddrRegister::AddrPool::deallocate(const Addr& p_addr)
 {
 	if(std::find(free.begin(), free.end(), p_addr) == free.end())
 		free.push_back(p_addr);

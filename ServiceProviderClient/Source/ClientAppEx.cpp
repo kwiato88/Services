@@ -55,7 +55,7 @@ std::unique_ptr<msg::Connection> createConnectionToLocalTcpIpHost()
 	return std::make_unique<msg::TcpIpConnection>("127.0.0.1", "50000");
 }
 
-void registerSer(Networking::ServiceProviderClient& p_provider, const std::string& p_name, const std::string& p_host, const std::string& p_port)
+void setSer(Networking::ServiceProviderClient& p_provider, const std::string& p_name, const std::string& p_host, const std::string& p_port)
 {
 	try
 	{
@@ -91,16 +91,16 @@ int main()
 		Networking::ServiceProviderClient serviceProvider(&createConnectionToLocalTcpIpHost);
 
 		getSer(serviceProvider, "MyService");
-		registerSer(serviceProvider, "MyService", "127.0.0.1", "1111");
+		setSer(serviceProvider, "MyService", "127.0.0.1", "1111");
 		getSer(serviceProvider, "MyService");
 
-		registerSer(serviceProvider, "MyService", "127.0.0.1", "50005");
+		setSer(serviceProvider, "MyService", "127.0.0.1", "50005");
 		getSer(serviceProvider, "MyService");
 
-		registerSer(serviceProvider, "MyService2", "127.0.0.1", "50001");
+		setSer(serviceProvider, "MyService2", "127.0.0.1", "50001");
 		getSer(serviceProvider, "MyService2");
 
-		registerSer(serviceProvider, "MyService3", "127.0.0.1", "50000");
+		setSer(serviceProvider, "MyService3", "127.0.0.1", "50000");
 		getSer(serviceProvider, "MyService3");
 
 		std::cout << "\nStop service provider" << std::endl;

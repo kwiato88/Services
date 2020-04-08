@@ -29,7 +29,7 @@ private:
 	public:
 		AddrPool();
 		void allocate(const Addr& p_addr);
-		void release(const Addr& p_addr);
+		void deallocate(const Addr& p_addr);
 		bool isAvailable(const Addr& p_addr) const;
 		boost::optional<Addr> findFirstFree(std::function<bool(const Addr&)> p_condition) const;
 	private:
