@@ -5,6 +5,7 @@ project(ServiceProviderClient)
 add_library(
     ServiceProviderClientLib
     Source/ServiceProviderClient.cpp
+    Source/ClientStore.cpp
 )
 
 target_include_directories(

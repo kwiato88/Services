@@ -1,29 +1,8 @@
 #include <iostream>
 
 #include "PrinterSer.hpp"
-#include "ServiceProviderClient.hpp"
+#include "ClientStore.hpp"
 #include "SockSocketUtils.hpp"
-#include "MsgTcpIpConnection.hpp"
-
-namespace Networking
-{
-
-class ClientStore
-{
-public:
-	msg::Client get(const std::string& p_serviceName);
-
-private:
-	Networking::ServiceProviderClient addrs;
-};
-
-msg::Client ClientStore::get(const std::string& p_serviceName)
-{
-	auto printerAddr = addrs.getServiceAddr(p_serviceName);
-	return msg::Client([=]() { return std::make_unique<msg::TcpIpConnection>(printerAddr.host, printerAddr.port); });
-}
-
-}
 
 int main()
 {
