@@ -28,7 +28,7 @@ target_include_directories(
     ServiceProviderSer
     PUBLIC
     Include
-    ../ServiceProviderSerCodec
+    ../ServiceProviderSerCodec/Include
     ../../sock/Include
     ../../msg/Include
     C:/Users/pikwiatk/boost_1_61_0

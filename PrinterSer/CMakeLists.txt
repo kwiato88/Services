@@ -1,45 +1,32 @@
 cmake_minimum_required(VERSION 2.8)
 
-project(ServiceProviderClient)
-
-add_library(
-    ServiceProviderClientLib
-    Source/ServiceProviderClient.cpp
-)
-
-target_include_directories(
-    ServiceProviderClientLib
-    PUBLIC
-    Include
-    ../ServiceProviderSerCodec/Include
-    ../../sock/Include
-    ../../msg/Include
-    C:/Users/pikwiatk/boost_1_61_0
-)
+project(PrinterService)
 
 add_executable(
-    ClientEx
-    Source/ClientAppEx.cpp
+    PrinterSer
+    Source/PrinterSerMain.cpp
+    Source/PrinterSer.cpp
 )
 
 target_include_directories(
-    ClientEx
+    PrinterSer
     PUBLIC
     Include
     ../ServiceProviderSerCodec/Include
+    ../ServiceProviderClient/Include
     ../../sock/Include
     ../../msg/Include
     C:/Users/pikwiatk/boost_1_61_0
 )
 
 add_dependencies(
-    ClientEx
+    PrinterSer
     ServiceProviderCodecLib
     ServiceProviderClientLib
 )
 
 target_link_libraries(
-    ClientEx
+    PrinterSer
     ServiceProviderCodecLib
     ServiceProviderClientLib
     libMsg.lib
