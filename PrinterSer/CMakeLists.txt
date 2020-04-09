@@ -12,8 +12,10 @@ target_include_directories(
     PrinterSer
     PUBLIC
     Include
+    ../PrinterSerCodec/Include
     ../ServiceProviderSerCodec/Include
     ../ServiceProviderClient/Include
+    ../Utils/Include
     ../../sock/Include
     ../../msg/Include
     C:/Users/pikwiatk/boost_1_61_0
@@ -21,12 +23,16 @@ target_include_directories(
 
 add_dependencies(
     PrinterSer
+    PrinterSerCodecLib
+    JsonCodecLib
     ServiceProviderCodecLib
     ServiceProviderClientLib
 )
 
 target_link_libraries(
     PrinterSer
+    PrinterSerCodecLib
+    JsonCodecLib
     ServiceProviderCodecLib
     ServiceProviderClientLib
     libMsg.lib

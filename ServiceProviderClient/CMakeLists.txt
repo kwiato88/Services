@@ -13,6 +13,7 @@ target_include_directories(
     PUBLIC
     Include
     ../ServiceProviderSerCodec/Include
+    ../Utils/Include
     ../../sock/Include
     ../../msg/Include
     C:/Users/pikwiatk/boost_1_61_0
@@ -28,6 +29,7 @@ target_include_directories(
     PUBLIC
     Include
     ../ServiceProviderSerCodec/Include
+    ../Utils/Include
     ../../sock/Include
     ../../msg/Include
     C:/Users/pikwiatk/boost_1_61_0
@@ -35,12 +37,14 @@ target_include_directories(
 
 add_dependencies(
     ClientEx
+    JsonCodecLib
     ServiceProviderCodecLib
     ServiceProviderClientLib
 )
 
 target_link_libraries(
     ClientEx
+    JsonCodecLib
     ServiceProviderCodecLib
     ServiceProviderClientLib
     libMsg.lib

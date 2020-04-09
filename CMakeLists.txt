@@ -8,9 +8,11 @@ link_directories(
     C:/Users/pikwiatk/msg/BuildMS/Release
 )
 
+add_subdirectory(Utils)
 add_subdirectory(ServiceProviderSerCodec)
 add_subdirectory(ServiceProviderSer)
 add_subdirectory(ServiceProviderClient)
+add_subdirectory(PrinterSerCodec)
 add_subdirectory(PrinterSer)
 add_subdirectory(PrinterClient)
 

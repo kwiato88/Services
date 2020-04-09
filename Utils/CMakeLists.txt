@@ -1,19 +1,17 @@
 cmake_minimum_required(VERSION 2.8)
 
-project(ServiceProviderCodec)
+project(Utils)
 
 add_library(
-    ServiceProviderCodecLib
+    JsonCodecLib
     STATIC
-    Source/ServiceProviderSerMsg.cpp
-    Source/ServiceProviderSerCodec.cpp
+    Source/JsonCodec.cpp
 )
 
 target_include_directories(
-    ServiceProviderCodecLib
+    JsonCodecLib
     PUBLIC
     Include
-    ../Utils/Include
     C:/Users/pikwiatk/boost_1_61_0
 )
 

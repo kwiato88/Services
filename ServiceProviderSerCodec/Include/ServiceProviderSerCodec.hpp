@@ -61,69 +61,94 @@ public:
 	}
 
 	template<typename T>
-	static std::string encode(const T&)
+	static std::string encodeImpl(const T&)
 	{
 		return "";
 	}
 	template<typename T>
-	static T decode(const std::string&)
+	static T decodeImpl(const std::string&)
 	{
 		return T{};
 	}
 
-	template<>
-	static std::string encode<ServiceProviderMsg::SetService>(const ServiceProviderMsg::SetService& p_msg)
+	template<typename T>
+	static std::string encode(const T& p_msg)
 	{
-		return withThrow(&Networking::ServiceProviderMsg::Json::encode_SetService, p_msg);
+		try
+		{
+			return encodeImpl<T>(p_msg);
+		}
+		catch (std::exception& e)
+		{
+			throw ExceptionType(e.what());
+		}
 	}
-	template<>
-	static ServiceProviderMsg::SetService decode<ServiceProviderMsg::SetService>(const std::string& p_msg)
+	template<typename T>
+	static T decode(const std::string& p_msg)
 	{
-		return withThrow(&Networking::ServiceProviderMsg::Json::decode_SetService, p_msg);
-	}
-
-	template<>
-	static std::string encode<ServiceProviderMsg::RemoveService>(const ServiceProviderMsg::RemoveService& p_msg)
-	{
-		return withThrow(&Networking::ServiceProviderMsg::Json::encode_RemoveService, p_msg);
-	}
-	template<>
-	static ServiceProviderMsg::RemoveService decode<ServiceProviderMsg::RemoveService>(const std::string& p_msg)
-	{
-		return withThrow(&Networking::ServiceProviderMsg::Json::decode_RemoveService, p_msg);
-	}
-
-	template<>
-	static std::string encode<ServiceProviderMsg::ServiceAddr>(const ServiceProviderMsg::ServiceAddr& p_msg)
-	{
-		return withThrow(&Networking::ServiceProviderMsg::Json::encode_ServiceAddr, p_msg);
-	}
-	template<>
-	static ServiceProviderMsg::ServiceAddr decode<ServiceProviderMsg::ServiceAddr>(const std::string& p_msg)
-	{
-		return withThrow(&Networking::ServiceProviderMsg::Json::decode_ServiceAddr, p_msg);
+		try
+		{
+			return decodeImpl<T>(p_msg);
+		}
+		catch (std::exception& e)
+		{
+			throw ExceptionType(e.what());
+		}
 	}
 
 	template<>
-	static std::string encode<ServiceProviderMsg::GetServiceAddr>(const ServiceProviderMsg::GetServiceAddr& p_msg)
+	static std::string encodeImpl<ServiceProviderMsg::SetService>(const ServiceProviderMsg::SetService& p_msg)
 	{
-		return withThrow(&Networking::ServiceProviderMsg::Json::encode_GetServiceAddr, p_msg);
+		return Networking::ServiceProviderMsg::Json::encode_SetService(p_msg);
 	}
 	template<>
-	static ServiceProviderMsg::GetServiceAddr decode<ServiceProviderMsg::GetServiceAddr>(const std::string& p_msg)
+	static ServiceProviderMsg::SetService decodeImpl<ServiceProviderMsg::SetService>(const std::string& p_msg)
 	{
-		return withThrow(&Networking::ServiceProviderMsg::Json::decode_GetServiceAddr, p_msg);
+		return Networking::ServiceProviderMsg::Json::decode_SetService(p_msg);
 	}
 
 	template<>
-	static std::string encode<ServiceProviderMsg::Stop>(const ServiceProviderMsg::Stop& p_msg)
+	static std::string encodeImpl<ServiceProviderMsg::RemoveService>(const ServiceProviderMsg::RemoveService& p_msg)
 	{
-		return withThrow(&Networking::ServiceProviderMsg::Json::encode_Stop, p_msg);
+		return Networking::ServiceProviderMsg::Json::encode_RemoveService(p_msg);
 	}
 	template<>
-	static ServiceProviderMsg::Stop decode<ServiceProviderMsg::Stop>(const std::string& p_msg)
+	static ServiceProviderMsg::RemoveService decodeImpl<ServiceProviderMsg::RemoveService>(const std::string& p_msg)
 	{
-		return withThrow(&Networking::ServiceProviderMsg::Json::decode_Stop, p_msg);
+		return Networking::ServiceProviderMsg::Json::decode_RemoveService(p_msg);
+	}
+
+	template<>
+	static std::string encodeImpl<ServiceProviderMsg::ServiceAddr>(const ServiceProviderMsg::ServiceAddr& p_msg)
+	{
+		return Networking::ServiceProviderMsg::Json::encode_ServiceAddr(p_msg);
+	}
+	template<>
+	static ServiceProviderMsg::ServiceAddr decodeImpl<ServiceProviderMsg::ServiceAddr>(const std::string& p_msg)
+	{
+		return Networking::ServiceProviderMsg::Json::decode_ServiceAddr(p_msg);
+	}
+
+	template<>
+	static std::string encodeImpl<ServiceProviderMsg::GetServiceAddr>(const ServiceProviderMsg::GetServiceAddr& p_msg)
+	{
+		return Networking::ServiceProviderMsg::Json::encode_GetServiceAddr(p_msg);
+	}
+	template<>
+	static ServiceProviderMsg::GetServiceAddr decodeImpl<ServiceProviderMsg::GetServiceAddr>(const std::string& p_msg)
+	{
+		return Networking::ServiceProviderMsg::Json::decode_GetServiceAddr(p_msg);
+	}
+
+	template<>
+	static std::string encodeImpl<ServiceProviderMsg::Stop>(const ServiceProviderMsg::Stop& p_msg)
+	{
+		return Networking::ServiceProviderMsg::Json::encode_Stop(p_msg);
+	}
+	template<>
+	static ServiceProviderMsg::Stop decodeImpl<ServiceProviderMsg::Stop>(const std::string& p_msg)
+	{
+		return Networking::ServiceProviderMsg::Json::decode_Stop(p_msg);
 	}
 };
 

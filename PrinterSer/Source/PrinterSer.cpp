@@ -1,34 +1,25 @@
 #include <iostream>
 
 #include "PrinterSer.hpp"
+#include "PrinterSerCodec.hpp"
 #include "ServiceProviderClient.hpp"
 #include "MsgTcpIpServer.hpp"
 
 namespace Networking
 {
-namespace PrinterSerMsg
-{
-ID getID(const std::string& p_msg)
-{
-	if(p_msg == "Stop")
-		return ID::Stop;
-	return ID::Print;
-}
-}
 
-class PrintHandler : public msg::Handler
+class PrintHandler : public msg::IndicationHandler<PrinterSerMsg::Print>
 {
 public:
-	std::string handle(const std::string& p_msg)
+	void handle(const PrinterSerMsg::Print& p_msg)
 	{
-		std::cout << "  PRINT" << std::endl;
-		std::cout << p_msg << std::endl;
-		return "";
+		std::cout << "\n  PRINT" << std::endl;
+		std::cout << p_msg.data << std::endl;
 	}
 };
 
 Printer::Printer()
-	: BaseService(std::bind(&Printer::createServer, this), &PrinterSerMsg::getID)
+	: BaseService(std::bind(&Printer::createServer, this), &PrinterSerMsg::Json::Codec::getId)
 {
 	ServiceProviderClient provider;
 	auto addr = provider.setServiceAddr(name);
@@ -36,9 +27,12 @@ Printer::Printer()
 	port = addr.port;
 	std::cout << name << " registered at [" << host << ":" << port << "]" << std::endl;
 
-	addHandler(PrinterSerMsg::ID::Stop, std::make_unique<BaseService::NativeStopHandler>(*this));
-	addHandler(PrinterSerMsg::ID::Print, std::make_unique<PrintHandler>());
+	using Codec = PrinterSerMsg::Json::Codec;
+	using StopHandler = BaseService::StopHandler<PrinterSerMsg::Stop>;
+	addIndHandler<PrintHandler, Codec>(std::make_unique<PrintHandler>());
+	addIndHandler<StopHandler, Codec>(std::make_unique<StopHandler>(*this));
 }
+
 
 Printer::~Printer()
 {

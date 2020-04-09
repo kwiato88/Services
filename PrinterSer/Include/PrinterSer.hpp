@@ -1,22 +1,10 @@
 #pragma once
 
+#include "PrinterSerMsg.hpp"
 #include "MsgService.hpp"
 
 namespace Networking
 {
-
-namespace PrinterSerMsg
-{
-enum class ID
-{
-	Print,
-	Stop,
-	Dummy
-};
-
-ID getID(const std::string&);
-
-}
 
 using BaseService = msg::Service<PrinterSerMsg::ID>;
 class Printer : public BaseService

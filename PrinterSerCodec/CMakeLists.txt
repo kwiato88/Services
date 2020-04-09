@@ -1,16 +1,16 @@
 cmake_minimum_required(VERSION 2.8)
 
-project(ServiceProviderCodec)
+project(PrinterSerCodec)
 
 add_library(
-    ServiceProviderCodecLib
+    PrinterSerCodecLib
     STATIC
-    Source/ServiceProviderSerMsg.cpp
-    Source/ServiceProviderSerCodec.cpp
+    Source/PrinterSerMsg.cpp
+    Source/PrinterSerCodec.cpp
 )
 
 target_include_directories(
-    ServiceProviderCodecLib
+    PrinterSerCodecLib
     PUBLIC
     Include
     ../Utils/Include
