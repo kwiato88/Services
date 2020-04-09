@@ -11,7 +11,8 @@ link_directories(
 add_subdirectory(ServiceProviderSerCodec)
 add_subdirectory(ServiceProviderSer)
 add_subdirectory(ServiceProviderClient)
-add_subdirectory(PrinterSer)    
+add_subdirectory(PrinterSer)
+add_subdirectory(PrinterClient)
 
 if( MSVC ) # VS2012 doesn't support correctly the tuples yet
     add_definitions( /D _VARIADIC_MAX=10 )

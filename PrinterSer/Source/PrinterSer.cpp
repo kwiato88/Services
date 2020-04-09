@@ -34,7 +34,7 @@ Printer::Printer()
 	auto addr = provider.setServiceAddr("PrinterService");
 	host = addr.host;
 	port = addr.port;
-	std::cout << "PrinterService registered at [" << host << ":" << port << "]";
+	std::cout << "PrinterService registered at [" << host << ":" << port << "]" << std::endl;
 
 	addHandler(PrinterSerMsg::ID::Stop, std::make_unique<BaseService::NativeStopHandler>(*this));
 	addHandler(PrinterSerMsg::ID::Print, std::make_unique<PrintHandler>());
