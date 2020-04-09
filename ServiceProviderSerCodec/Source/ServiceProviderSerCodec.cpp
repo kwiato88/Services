@@ -99,6 +99,21 @@ SetService decode_SetService(const std::string& p_msg)
 	return msg;
 }
 
+std::string encode_RemoveService(const RemoveService& p_msg)
+{
+	boost::property_tree::ptree msg;
+	msg.put("name", p_msg.name);
+
+	return encode_Message(RemoveService::id, msg);
+}
+RemoveService decode_RemoveService(const std::string& p_msg)
+{
+	auto data = decode_Message(RemoveService::id, p_msg);
+	RemoveService msg = {};
+	msg.name = data.get<std::string>("name", "");
+	return msg;
+}
+
 std::string encode_Stop(const Stop&)
 {
 	return encode_Message(ID::Stop, boost::property_tree::ptree());

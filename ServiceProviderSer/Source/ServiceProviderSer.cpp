@@ -35,6 +35,19 @@ void ServiceProvider::SetServiceHandler::onError(std::exception& e)
 	std::cerr << "Failed to set address. " << e.what() << std::endl;
 }
 
+ServiceProvider::RemoveServiceHandler::RemoveServiceHandler(AddrRegister& p_addresses)
+	: addresses(p_addresses)
+{}
+void ServiceProvider::RemoveServiceHandler::handle(const ServiceProviderMsg::RemoveService& p_msg)
+{
+	std::cout << "Try to release " << p_msg.name << " service" << std::endl;
+	addresses.remove(p_msg.name);
+}
+void ServiceProvider::RemoveServiceHandler::onError(std::exception& e)
+{
+	std::cerr << "Failed to remove service. " << e.what() << std::endl;
+}
+
 ServiceProvider::GetServiceHandler::GetServiceHandler(AddrRegister& p_addresses)
 	: addresses(p_addresses)
 {}
@@ -67,6 +80,7 @@ ServiceProvider::ServiceProvider(msg::ServerFacotry p_serverFacotry)
 	addIndHandler<StopHandler, JsonCodec>(std::make_unique<StopHandler>(*this, std::bind(&ServiceProvider::onStopMsg, this)));
 	addReqHandler<SetServiceHandler, JsonCodec>(std::make_unique<SetServiceHandler>(addresses));
 	addReqHandler<GetServiceHandler, JsonCodec>(std::make_unique<GetServiceHandler>(addresses));
+	addIndHandler<RemoveServiceHandler, JsonCodec>(std::make_unique<RemoveServiceHandler>(addresses));
 	setDefaultHandler(std::make_unique<LoggingHandler>());
 }
 

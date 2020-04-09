@@ -25,6 +25,16 @@ public:
 		AddrRegister& addresses;
 	};
 
+	class RemoveServiceHandler : public msg::IndicationHandler<ServiceProviderMsg::RemoveService>
+	{
+	public:
+		RemoveServiceHandler(AddrRegister& p_addresses);
+		void handle(const ServiceProviderMsg::RemoveService& p_msg);
+		void onError(std::exception& e);
+	private:
+		AddrRegister& addresses;
+	};
+
 	class GetServiceHandler : public msg::ReqHandler<ServiceProviderMsg::GetServiceAddr, ServiceProviderMsg::ServiceAddr>
 	{
 	public:

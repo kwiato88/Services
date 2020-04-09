@@ -22,6 +22,8 @@ std::string encode_ServiceAddr(const ServiceAddr&);
 ServiceAddr decode_ServiceAddr(const std::string&);
 std::string encode_SetService(const SetService&);
 SetService  decode_SetService(const std::string&);
+std::string   encode_RemoveService(const RemoveService&);
+RemoveService decode_RemoveService(const std::string&);
 std::string encode_Stop(const Stop&);
 Stop        decode_Stop(const std::string&);
 
@@ -78,6 +80,17 @@ public:
 	static ServiceProviderMsg::SetService decode<ServiceProviderMsg::SetService>(const std::string& p_msg)
 	{
 		return withThrow(&Networking::ServiceProviderMsg::Json::decode_SetService, p_msg);
+	}
+
+	template<>
+	static std::string encode<ServiceProviderMsg::RemoveService>(const ServiceProviderMsg::RemoveService& p_msg)
+	{
+		return withThrow(&Networking::ServiceProviderMsg::Json::encode_RemoveService, p_msg);
+	}
+	template<>
+	static ServiceProviderMsg::RemoveService decode<ServiceProviderMsg::RemoveService>(const std::string& p_msg)
+	{
+		return withThrow(&Networking::ServiceProviderMsg::Json::decode_RemoveService, p_msg);
 	}
 
 	template<>

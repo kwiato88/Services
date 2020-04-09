@@ -15,6 +15,7 @@ std::string toString(ID p_id)
 	case ID::GetServiceAddr: return "GetServiceAddr";
 	case ID::ServiceAddr: return "ServiceAddr";
 	case ID::SetService: return "SetService";
+	case ID::RemoveService: return "RemoveService";
 	case ID::Stop: return "Stop";
 	case ID::Dummy: return "Dummy";
 	default: throw std::runtime_error("Invalid ID");
@@ -30,6 +31,8 @@ ID idFromString(const std::string& p_id)
 		return ID::ServiceAddr;
 	if (p_id == "SetService")
 		return ID::SetService;
+	if (p_id == "RemoveService")
+		return ID::RemoveService;
 	if (p_id == "Stop")
 		return ID::Stop;
 	if (p_id == "Dummy")

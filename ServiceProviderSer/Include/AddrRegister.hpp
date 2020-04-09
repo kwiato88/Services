@@ -22,6 +22,7 @@ public:
 
 	Addr get(const std::string& p_name) const;
 	Addr add(const std::string& p_name, const Addr& p_preferendAddr);
+	void remove(const std::string& p_name);
 
 private:
 	class AddrPool
@@ -40,6 +41,7 @@ private:
 	boost::optional<Addr> tryGetPrefered(const Addr& p_preferendAddr) const;
 	boost::optional<Addr> tryGetNotPrefered() const;
 	bool isAlreadyRegistered(const Addr& p_addr) const;
+	bool isAlreadyRegistered(const std::string& p_name) const;
 	bool isUsed(const Addr& p_addr) const;
 	void allocate(const std::string& p_name, const Addr& p_addr);
 

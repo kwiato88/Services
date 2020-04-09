@@ -13,6 +13,7 @@ enum class ID
 	GetServiceAddr,
 	ServiceAddr,
 	SetService,
+	RemoveService,
 	Stop,
 	Dummy
 };
@@ -39,6 +40,12 @@ struct SetService
 	std::string name;
 	std::string host;
 	std::string port;
+};
+
+struct RemoveService
+{
+	static const ID id = ID::RemoveService;
+	std::string name;
 };
 
 struct Stop

@@ -60,10 +60,15 @@ AddrRegister::Addr AddrRegister::get(const std::string& p_name) const
 
 AddrRegister::Addr AddrRegister::add(const std::string& p_name, const Addr& p_preferendAddr)
 {
-	if (addrs.find(p_name) != addrs.end())
+	if (isAlreadyRegistered(p_name))
 		throw std::runtime_error(p_name + " addr already registered");
 	allocate(p_name, getAvailableAddr(p_preferendAddr));
 	return get(p_name);
+}
+
+bool AddrRegister::isAlreadyRegistered(const std::string& p_name) const
+{
+	return addrs.find(p_name) != addrs.end();
 }
 
 bool AddrRegister::isAlreadyRegistered(const Addr& p_addr) const
@@ -118,6 +123,15 @@ void AddrRegister::allocate(const std::string& p_name, const Addr& p_addr)
 {
 	allowedAddrs.allocate(p_addr);
 	addrs[p_name] = p_addr;
+}
+
+void AddrRegister::remove(const std::string& p_name)
+{
+	if (isAlreadyRegistered(p_name))
+	{
+		allowedAddrs.deallocate(addrs[p_name]);
+		addrs.erase(p_name);
+	}
 }
 
 }
