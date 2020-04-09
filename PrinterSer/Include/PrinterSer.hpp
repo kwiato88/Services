@@ -23,12 +23,14 @@ class Printer : public BaseService
 {
 public:
 	Printer();
+	~Printer();
 
 private:
 	std::unique_ptr<msg::Server> createServer();
 
 	std::string host;
 	std::string port;
+	const std::string name = "PrinterService";
 };
 
 }

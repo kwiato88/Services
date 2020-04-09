@@ -31,13 +31,25 @@ Printer::Printer()
 	: BaseService(std::bind(&Printer::createServer, this), &PrinterSerMsg::getID)
 {
 	ServiceProviderClient provider;
-	auto addr = provider.setServiceAddr("PrinterService");
+	auto addr = provider.setServiceAddr(name);
 	host = addr.host;
 	port = addr.port;
-	std::cout << "PrinterService registered at [" << host << ":" << port << "]" << std::endl;
+	std::cout << name << " registered at [" << host << ":" << port << "]" << std::endl;
 
 	addHandler(PrinterSerMsg::ID::Stop, std::make_unique<BaseService::NativeStopHandler>(*this));
 	addHandler(PrinterSerMsg::ID::Print, std::make_unique<PrintHandler>());
+}
+
+Printer::~Printer()
+{
+	try
+	{
+		ServiceProviderClient provider;
+		provider.removeServiceAddr(name);
+	}
+	catch (std::exception&)
+	{
+	}
 }
 
 std::unique_ptr<msg::Server> Printer::createServer()

@@ -9,10 +9,11 @@ int main()
 	{
 		sock::init();
 		
-		std::cout << "Create priter service" << std::endl;
-		Networking::Printer printer;
-		printer.start();
-
+		{
+			std::cout << "Create priter service" << std::endl;
+			Networking::Printer printer;
+			printer.start();
+		}
 		sock::cleanup();
 		return 0;
 	}
