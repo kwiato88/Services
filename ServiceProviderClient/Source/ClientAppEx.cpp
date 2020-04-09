@@ -90,20 +90,34 @@ int main()
 
 		Networking::ServiceProviderClient serviceProvider(&createConnectionToLocalTcpIpHost);
 
+		std::cout << "\n\n    Try to get unregistered service" << std::endl;
 		getSer(serviceProvider, "MyService");
+
+		std::cout << "\n\n    Try to register service on non available addr" << std::endl;
 		setSer(serviceProvider, "MyService", "127.0.0.1", "1111");
 		getSer(serviceProvider, "MyService");
 
+		std::cout << "\n\n    Try to register already registered service" << std::endl;
 		setSer(serviceProvider, "MyService", "127.0.0.1", "50005");
 		getSer(serviceProvider, "MyService");
 
+		std::cout << "\n\n    Try to register service on already registered addr" << std::endl;
 		setSer(serviceProvider, "MyService2", "127.0.0.1", "50001");
 		getSer(serviceProvider, "MyService2");
 
+		std::cout << "\n\n    Try to register service on used addr" << std::endl;
 		setSer(serviceProvider, "MyService3", "127.0.0.1", "50000");
 		getSer(serviceProvider, "MyService3");
 
-		std::cout << "\nStop service provider" << std::endl;
+		std::cout << "\n\n    Try to register service on free addr" << std::endl;
+		setSer(serviceProvider, "MyService4", "127.0.0.1", "50100");
+		getSer(serviceProvider, "MyService4");
+
+		std::cout << "\n\n    Try to register service without giving addr" << std::endl;
+		setSer(serviceProvider, "MyService5", "", "");
+		getSer(serviceProvider, "MyService5");
+
+		std::cout << "\n\nStop service provider" << std::endl;
 		serviceProvider.stop();
 
 		std::cout << "Finished" << std::endl;
