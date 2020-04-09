@@ -20,13 +20,14 @@ ServiceProvider::SetServiceHandler::SetServiceHandler(AddrRegister& p_addresses)
 {}
 ServiceProviderMsg::ServiceAddr  ServiceProvider::SetServiceHandler::handle(const ServiceProviderMsg::SetService& p_msg)
 {
-	std::cout << "Try to set " << p_msg.name << " service addr [" << p_msg.host << ":" << p_msg.port << "]" << std::endl;
+	std::cout << "Try to register " << p_msg.name << " service at [" << p_msg.host << ":" << p_msg.port << "]" << std::endl;
 
 	auto addr = addresses.add(p_msg.name, AddrRegister::Addr{ p_msg.host, p_msg.port });
 	ServiceProviderMsg::ServiceAddr resp = {};
 	resp.host = addr.host;
 	resp.port = addr.port;
 
+	std::cout << p_msg.name << " service registered at [" << resp.host << ":" << resp.port << "]" << std::endl;
 	return resp;
 }
 void ServiceProvider::SetServiceHandler::onError(std::exception& e)
