@@ -53,11 +53,11 @@ std::string encode_GetServiceAddr(const GetServiceAddr& p_msg)
 	boost::property_tree::ptree msg;
 	msg.put("name", p_msg.name);
 
-	return encode_Message(ID::GetServiceAddr, msg);
+	return encode_Message(GetServiceAddr::id, msg);
 }
 GetServiceAddr decode_GetServiceAddr(const std::string& p_msg)
 {
-	auto data = decode_Message(ID::GetServiceAddr, p_msg);
+	auto data = decode_Message(GetServiceAddr::id, p_msg);
 	GetServiceAddr msg = {};
 	msg.name = data.get<std::string>("name", "");
 	return msg;
@@ -69,11 +69,11 @@ std::string encode_ServiceAddr(const ServiceAddr& p_msg)
 	msg.put("host", p_msg.host);
 	msg.put("port", p_msg.port);
 
-	return encode_Message(ID::ServiceAddr, msg);
+	return encode_Message(ServiceAddr::id, msg);
 }
 ServiceAddr decode_ServiceAddr(const std::string& p_msg)
 {
-	auto data = decode_Message(ID::ServiceAddr, p_msg);
+	auto data = decode_Message(ServiceAddr::id, p_msg);
 	ServiceAddr msg = {};
 	msg.host = data.get<std::string>("host", "");
 	msg.port = data.get<std::string>("port", "");
@@ -87,11 +87,11 @@ std::string encode_SetService(const SetService& p_msg)
 	msg.put("host", p_msg.host);
 	msg.put("port", p_msg.port);
 
-	return encode_Message(ID::SetService, msg);
+	return encode_Message(SetService::id, msg);
 }
 SetService decode_SetService(const std::string& p_msg)
 {
-	auto data = decode_Message(ID::SetService, p_msg);
+	auto data = decode_Message(SetService::id, p_msg);
 	SetService msg = {};
 	msg.name = data.get<std::string>("name", "");
 	msg.host = data.get<std::string>("host", "");
@@ -116,11 +116,11 @@ RemoveService decode_RemoveService(const std::string& p_msg)
 
 std::string encode_Stop(const Stop&)
 {
-	return encode_Message(ID::Stop, boost::property_tree::ptree());
+	return encode_Message(Stop::id, boost::property_tree::ptree());
 }
 Stop decode_Stop(const std::string& p_msg)
 {
-	decode_Message(ID::Stop, p_msg);
+	decode_Message(Stop::id, p_msg);
 	return Stop{};
 }
 
