@@ -17,6 +17,7 @@ public:
 	ServiceProviderMsg::ServiceAddr getServiceAddr(const std::string& p_name);
 	ServiceProviderMsg::ServiceAddr setServiceAddr(const std::string& p_name);
 	ServiceProviderMsg::ServiceAddr setServiceAddr(const std::string& p_service, const std::string& p_host, const std::string& p_port);
+	void removeServiceAddr(const std::string& p_name);
 	void stop();
 private:
 	using JsonCodec = ServiceProviderMsg::Json::Codec;

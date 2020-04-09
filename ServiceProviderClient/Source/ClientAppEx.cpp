@@ -65,6 +65,24 @@ int main()
 		setSer(serviceProvider, "MyService5", "", "");
 		getSer(serviceProvider, "MyService5");
 
+		std::cout << "\n\nRemove MyService services" << std::endl;
+		getSer(serviceProvider, "MyService");
+		std::cout << "\nRemove MyService" << std::endl;
+		serviceProvider.removeServiceAddr("MyService");
+		getSer(serviceProvider, "MyService");
+
+		std::cout << "\n\nTry remove not existing services" << std::endl;
+		getSer(serviceProvider, "MyService10");
+		std::cout << "Remove MyService10" << std::endl;
+		serviceProvider.removeServiceAddr("MyService10");
+		getSer(serviceProvider, "MyService10");
+
+		std::cout << "\n\nRemove all services" << std::endl;
+		serviceProvider.removeServiceAddr("MyService2");
+		serviceProvider.removeServiceAddr("MyService3");
+		serviceProvider.removeServiceAddr("MyService4");
+		serviceProvider.removeServiceAddr("MyService5");
+
 		std::cout << "\n\nStop service provider" << std::endl;
 		serviceProvider.stop();
 

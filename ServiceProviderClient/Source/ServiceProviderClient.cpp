@@ -35,6 +35,13 @@ ServiceProviderMsg::ServiceAddr ServiceProviderClient::setServiceAddr(const std:
 	return JsonCodec::decode<ServiceProviderMsg::ServiceAddr>(client.sendReq(JsonCodec::encode(req)));
 }
 
+void ServiceProviderClient::removeServiceAddr(const std::string& p_name)
+{
+	ServiceProviderMsg::RemoveService msg = {};
+	msg.name = p_name;
+	client.sendInd(JsonCodec::encode(msg));
+}
+
 void ServiceProviderClient::stop()
 {
 	client.sendInd(JsonCodec::encode(ServiceProviderMsg::Stop{}));
