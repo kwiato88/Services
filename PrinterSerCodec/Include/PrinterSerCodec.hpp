@@ -31,12 +31,12 @@ struct Serialization
 	template<typename T>
 	static boost::property_tree::ptree toPtree(const T&)
 	{
-		return boost::property_tree::ptree();
+		throw ::JsonCodec::CodecError("Unextected message to encode");
 	}
 	template<typename T>
 	static T fromPtree(const boost::property_tree::ptree&)
 	{
-		return T{};
+		throw ::JsonCodec::CodecError("Unextected message to decode");
 	}
 
 	template<>
