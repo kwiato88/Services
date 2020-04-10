@@ -37,7 +37,7 @@ int main()
 		print(printerClient, "line1\n  line2\nline3");
 
 		Networking::MessageSender sender;
-		sender.sendInd<PrinterCodec, Networking::PrinterSerMsg::Print>("PrinterService", Networking::PrinterSerMsg::Print{ "qwerty" });
+		sender.sendInd<PrinterCodec>("PrinterService", Networking::PrinterSerMsg::Print{ "qwerty" });
 
 		using Codec = Networking::PrinterSerMsg::Json::Codec;
 		printerClient.sendInd(Networking::PrinterSerMsg::Stop{});
