@@ -6,6 +6,7 @@ add_library(
     ServiceProviderClientLib
     Source/ServiceProviderClient.cpp
     Source/ClientStore.cpp
+    Source/CachedClientStore.cpp
 )
 
 target_include_directories(
