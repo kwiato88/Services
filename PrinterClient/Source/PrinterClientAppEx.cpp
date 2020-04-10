@@ -5,14 +5,16 @@
 #include "ClientStore.hpp"
 #include "SockSocketUtils.hpp"
 
-void print(msg::Client& p_printer, const std::string& p_str)
+using PrinterCodec = Networking::PrinterSerMsg::Json::Codec;
+using PrinterClient = Networking::ClientWithCodec<PrinterCodec>;
+
+void print(PrinterClient& p_printer, const std::string& p_str)
 {
 	try
 	{
-		using Codec = Networking::PrinterSerMsg::Json::Codec;
 		Networking::PrinterSerMsg::Print msg = {};
 		msg.data = p_str;
-		p_printer.sendInd(Codec::encode(msg));
+		p_printer.sendInd(msg);
 	}
 	catch (std::exception& e)
 	{
@@ -27,14 +29,14 @@ int main()
 		sock::init();
 
 		Networking::ClientStore clients;
-		auto printerClient = clients.get("PrinterService");
+		auto printerClient = clients.getWithCodec<PrinterCodec>("PrinterService");
 		print(printerClient, "some text");
 		print(printerClient, "some other text");
 		print(printerClient, "qwddf niiore ertgtttttttttttttttt");
 		print(printerClient, "line1\n  line2\nline3");
 
 		using Codec = Networking::PrinterSerMsg::Json::Codec;
-		printerClient.sendInd(Codec::encode(Networking::PrinterSerMsg::Stop{}));
+		printerClient.sendInd(Networking::PrinterSerMsg::Stop{});
 
 		sock::cleanup();
 		return 0;
