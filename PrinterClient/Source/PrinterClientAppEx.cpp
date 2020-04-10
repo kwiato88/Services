@@ -3,6 +3,7 @@
 #include "PrinterSerMsg.hpp"
 #include "PrinterSerCodec.hpp"
 #include "ClientStore.hpp"
+#include "MessageSender.hpp"
 #include "SockSocketUtils.hpp"
 
 using PrinterCodec = Networking::PrinterSerMsg::Json::Codec;
