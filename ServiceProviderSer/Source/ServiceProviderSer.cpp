@@ -1,6 +1,7 @@
 #include <iostream>
 #include "ServiceProviderSer.hpp"
 #include "ServiceProviderSerCodec.hpp"
+#include "MsgReqHandler.hpp"
 
 namespace Networking
 {
@@ -15,10 +16,40 @@ public:
 	}
 };
 
-ServiceProvider::SetServiceHandler::SetServiceHandler(AddrRegister& p_addresses)
+class SetServiceHandler : public msg::ReqHandler<ServiceProviderMsg::SetService, ServiceProviderMsg::ServiceAddr>
+{
+public:
+	SetServiceHandler(AddrRegister& p_addresses);
+	ServiceProviderMsg::ServiceAddr handle(const ServiceProviderMsg::SetService& p_msg);
+	void onError(std::exception& e);
+private:
+	AddrRegister& addresses;
+};
+
+class RemoveServiceHandler : public msg::IndicationHandler<ServiceProviderMsg::RemoveService>
+{
+public:
+	RemoveServiceHandler(AddrRegister& p_addresses);
+	void handle(const ServiceProviderMsg::RemoveService& p_msg);
+	void onError(std::exception& e);
+private:
+	AddrRegister& addresses;
+};
+
+class GetServiceHandler : public msg::ReqHandler<ServiceProviderMsg::GetServiceAddr, ServiceProviderMsg::ServiceAddr>
+{
+public:
+	GetServiceHandler(AddrRegister& p_addresses);
+	ServiceProviderMsg::ServiceAddr handle(const ServiceProviderMsg::GetServiceAddr& p_msg);
+	void onError(std::exception& e);
+private:
+	AddrRegister& addresses;
+};
+
+SetServiceHandler::SetServiceHandler(AddrRegister& p_addresses)
 	: addresses(p_addresses)
 {}
-ServiceProviderMsg::ServiceAddr  ServiceProvider::SetServiceHandler::handle(const ServiceProviderMsg::SetService& p_msg)
+ServiceProviderMsg::ServiceAddr  SetServiceHandler::handle(const ServiceProviderMsg::SetService& p_msg)
 {
 	std::cout << "Try to register " << p_msg.name << " service at [" << p_msg.host << ":" << p_msg.port << "]" << std::endl;
 
@@ -30,28 +61,28 @@ ServiceProviderMsg::ServiceAddr  ServiceProvider::SetServiceHandler::handle(cons
 	std::cout << p_msg.name << " service registered at [" << resp.host << ":" << resp.port << "]" << std::endl;
 	return resp;
 }
-void ServiceProvider::SetServiceHandler::onError(std::exception& e)
+void SetServiceHandler::onError(std::exception& e)
 {
 	std::cerr << "Failed to set address. " << e.what() << std::endl;
 }
 
-ServiceProvider::RemoveServiceHandler::RemoveServiceHandler(AddrRegister& p_addresses)
+RemoveServiceHandler::RemoveServiceHandler(AddrRegister& p_addresses)
 	: addresses(p_addresses)
 {}
-void ServiceProvider::RemoveServiceHandler::handle(const ServiceProviderMsg::RemoveService& p_msg)
+void RemoveServiceHandler::handle(const ServiceProviderMsg::RemoveService& p_msg)
 {
 	std::cout << "Try to release " << p_msg.name << " service" << std::endl;
 	addresses.remove(p_msg.name);
 }
-void ServiceProvider::RemoveServiceHandler::onError(std::exception& e)
+void RemoveServiceHandler::onError(std::exception& e)
 {
 	std::cerr << "Failed to remove service. " << e.what() << std::endl;
 }
 
-ServiceProvider::GetServiceHandler::GetServiceHandler(AddrRegister& p_addresses)
+GetServiceHandler::GetServiceHandler(AddrRegister& p_addresses)
 	: addresses(p_addresses)
 {}
-ServiceProviderMsg::ServiceAddr ServiceProvider::GetServiceHandler::handle(const ServiceProviderMsg::GetServiceAddr& p_msg)
+ServiceProviderMsg::ServiceAddr GetServiceHandler::handle(const ServiceProviderMsg::GetServiceAddr& p_msg)
 {
 	std::cout << "Get " << p_msg.name << " service addr" << std::endl;
 
@@ -62,7 +93,7 @@ ServiceProviderMsg::ServiceAddr ServiceProvider::GetServiceHandler::handle(const
 
 	return resp;
 }
-void ServiceProvider::GetServiceHandler::onError(std::exception& e)
+void GetServiceHandler::onError(std::exception& e)
 {
 	std::cerr << "Failed to get address. " << e.what() << std::endl;
 }

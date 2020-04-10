@@ -5,6 +5,11 @@
 namespace Networking
 {
 
+ClientStore::ClientStore(const std::string& p_providerHost, const std::string& p_providerPort)
+	:addrs(p_providerHost, p_providerPort)
+{
+}
+
 msg::Client ClientStore::get(const std::string& p_serviceName)
 {
 	auto addr = addrs.getServiceAddr(p_serviceName);

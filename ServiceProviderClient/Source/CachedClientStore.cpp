@@ -8,6 +8,10 @@ CachedClientStore::Addr::Addr(const ServiceProviderMsg::ServiceAddr& p_addr)
 	: host(p_addr.host), port(p_addr.port)
 {}
 
+CachedClientStore::CachedClientStore(const std::string& p_providerHost, const std::string& p_providerPort)
+	: provider(p_providerHost, p_providerPort)
+{}
+
 msg::Client CachedClientStore::get(const std::string& p_serviceName)
 {
 	auto addr = addrs.find(p_serviceName);

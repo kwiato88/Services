@@ -12,6 +12,8 @@ namespace Networking
 class CachedClientStore
 {
 public:
+	CachedClientStore(const std::string& p_providerHost = "127.0.0.1", const std::string& p_providerPort = "50000");
+
 	msg::Client get(const std::string& p_serviceName);
 	template<typename Codec>
 	ClientWithCodec<Codec> getWtihCodec(const std::string& p_serviceName)

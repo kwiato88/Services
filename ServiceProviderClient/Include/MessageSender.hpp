@@ -10,6 +10,10 @@ namespace Networking
 class MessageSender
 {
 public:
+	MessageSender(const std::string& p_providerHost = "127.0.0.1", const std::string& p_providerPort = "50000")
+		: clients(p_providerHost, p_providerPort)
+	{}
+
 	template<typename Codec, typename Ind>
 	void sendInd(const std::string& p_service, const Ind& p_msg)
 	{

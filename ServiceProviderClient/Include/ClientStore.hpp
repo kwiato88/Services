@@ -10,6 +10,7 @@ namespace Networking
 class ClientStore
 {
 public:
+	ClientStore(const std::string& p_providerHost = "127.0.0.1", const std::string& p_providerPort = "50000");
 	msg::Client get(const std::string& p_serviceName);
 	
 	template<typename Codec>
