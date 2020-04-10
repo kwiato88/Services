@@ -3,6 +3,7 @@
 #include <string>
 #include "ServiceProviderSerMsg.hpp"
 #include "ServiceProviderSerCodec.hpp"
+#include "ClientWithCodec.hpp"
 #include "MsgClient.hpp"
 
 namespace Networking
@@ -21,7 +22,7 @@ public:
 	void stop();
 private:
 	using JsonCodec = ServiceProviderMsg::Json::Codec;
-	msg::Client client;
+	ClientWithCodec<JsonCodec> client;
 };
 
 }

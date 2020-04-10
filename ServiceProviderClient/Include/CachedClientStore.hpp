@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ServiceProviderClient.hpp"
+#include "ClientWithCodec.hpp"
 #include "MsgClient.hpp"
 
 #include <map>
@@ -12,6 +13,11 @@ class CachedClientStore
 {
 public:
 	msg::Client get(const std::string& p_serviceName);
+	template<typename Codec>
+	ClientWithCodec<Codec> getWtihCodec(const std::string& p_serviceName)
+	{
+		return ClientWithCodec<Codec>(get(p_serviceName));
+	}
 	void remove(const std::string& p_serviceName);
 	void refresh(const std::string& p_serviceName);
 

@@ -9,42 +9,47 @@ ServiceProviderClient::ServiceProviderClient()
 {}
 
 ServiceProviderClient::ServiceProviderClient(const std::string& p_serverHost, const std::string& p_serverPort)
-	: client([=]() { return std::make_unique<msg::TcpIpConnection>(p_serverHost, p_serverPort); })
+	: client(msg::Client([=]() { return std::make_unique<msg::TcpIpConnection>(p_serverHost, p_serverPort); }))
 {}
 
 ServiceProviderMsg::ServiceAddr ServiceProviderClient::getServiceAddr(const std::string& p_name)
 {
-	ServiceProviderMsg::GetServiceAddr req = {};
+	using namespace ServiceProviderMsg;
+	GetServiceAddr req = {};
 	req.name = p_name;
-	return JsonCodec::decode<ServiceProviderMsg::ServiceAddr>(client.sendReq(JsonCodec::encode(req)));
+	return client.sendReq<GetServiceAddr, ServiceAddr>(req);
 }
 
 ServiceProviderMsg::ServiceAddr ServiceProviderClient::setServiceAddr(const std::string& p_name)
 {
-	ServiceProviderMsg::SetService req = {};
+	using namespace ServiceProviderMsg;
+	SetService req = {};
 	req.name = p_name;
-	return JsonCodec::decode<ServiceProviderMsg::ServiceAddr>(client.sendReq(JsonCodec::encode(req)));
+	return client.sendReq<SetService, ServiceAddr>(req);
 }
 
 ServiceProviderMsg::ServiceAddr ServiceProviderClient::setServiceAddr(const std::string& p_service, const std::string& p_host, const std::string& p_port)
 {
-	ServiceProviderMsg::SetService req = {};
+	using namespace ServiceProviderMsg;
+	SetService req = {};
 	req.name = p_service;
 	req.host = p_host;
 	req.port = p_port;
-	return JsonCodec::decode<ServiceProviderMsg::ServiceAddr>(client.sendReq(JsonCodec::encode(req)));
+	return client.sendReq<SetService, ServiceAddr>(req);
 }
 
 void ServiceProviderClient::removeServiceAddr(const std::string& p_name)
 {
-	ServiceProviderMsg::RemoveService msg = {};
+	using namespace ServiceProviderMsg;
+	RemoveService msg = {};
 	msg.name = p_name;
-	client.sendInd(JsonCodec::encode(msg));
+	client.sendInd(msg);
 }
 
 void ServiceProviderClient::stop()
 {
-	client.sendInd(JsonCodec::encode(ServiceProviderMsg::Stop{}));
+	using namespace ServiceProviderMsg;
+	client.sendInd(Stop{});
 }
 
 }
