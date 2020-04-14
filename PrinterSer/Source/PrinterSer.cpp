@@ -29,8 +29,8 @@ Printer::Printer()
 
 	using Codec = PrinterSerMsg::Json::Codec;
 	using StopHandler = BaseService::StopHandler<PrinterSerMsg::Stop>;
-	addIndHandler<PrintHandler, Codec>(std::make_unique<PrintHandler>());
-	addIndHandler<StopHandler, Codec>(std::make_unique<StopHandler>(*this));
+	addIndHandler<PrintHandler, Codec>(std::make_unique<PrintHandler>(), BaseService::Processing::Async);
+	addIndHandler<StopHandler, Codec>(std::make_unique<StopHandler>(*this), BaseService::Processing::Async);
 }
 
 
