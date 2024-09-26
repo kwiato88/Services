@@ -2,12 +2,8 @@ cmake_minimum_required(VERSION 2.8)
 
 project(Services)
 
-link_directories(
-    C:/Users/pikwiatk/boost_1_61_0/binMsvc
-    C:/Users/pikwiatk/sock/BuildMS/Release
-    C:/Users/pikwiatk/msg/BuildMS/Release
-)
-
+add_subdirectory(sock)
+add_subdirectory(msg)
 add_subdirectory(Utils)
 add_subdirectory(ServiceProviderSerCodec)
 add_subdirectory(ServiceProviderSer)

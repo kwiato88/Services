@@ -14,7 +14,7 @@ target_include_directories(
     PUBLIC
     Include
     ../Utils/Include
-    C:/Users/pikwiatk/boost_1_61_0
+    C:/Users/pikwiatk/boost_1_85_0
 )
 
 if( MSVC ) # VS2012 doesn't support correctly the tuples yet

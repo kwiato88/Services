@@ -16,9 +16,9 @@ target_include_directories(
     ../ServiceProviderSerCodec/Include
     ../ServiceProviderClient/Include
     ../Utils/Include
-    ../../sock/Include
-    ../../msg/Include
-    C:/Users/pikwiatk/boost_1_61_0
+    ../sock/Include
+    ../msg/Include
+    C:/Users/pikwiatk/boost_1_85_0
 )
 
 add_dependencies(
@@ -27,6 +27,8 @@ add_dependencies(
     JsonCodecLib
     ServiceProviderCodecLib
     ServiceProviderClientLib
+    libSock
+    libMsg
 )
 
 target_link_libraries(
@@ -35,8 +37,8 @@ target_link_libraries(
     JsonCodecLib
     ServiceProviderCodecLib
     ServiceProviderClientLib
-    libMsg.lib
-    libSock.lib
+    libSock
+    libMsg
     ws2_32
 )
 

@@ -15,9 +15,9 @@ target_include_directories(
     Include
     ../ServiceProviderSerCodec/Include
     ../Utils/Include
-    ../../sock/Include
-    ../../msg/Include
-    C:/Users/pikwiatk/boost_1_61_0
+    ../sock/Include
+    ../msg/Include
+    C:/Users/pikwiatk/boost_1_85_0
 )
 
 add_executable(
@@ -31,9 +31,9 @@ target_include_directories(
     Include
     ../ServiceProviderSerCodec/Include
     ../Utils/Include
-    ../../sock/Include
-    ../../msg/Include
-    C:/Users/pikwiatk/boost_1_61_0
+    ../sock/Include
+    ../msg/Include
+    C:/Users/pikwiatk/boost_1_85_0
 )
 
 add_dependencies(
@@ -41,6 +41,8 @@ add_dependencies(
     ServiceProviderSerLib
     ServiceProviderCodecLib
     JsonCodecLib
+    libMsg
+    libSock
 )
 
 target_link_libraries(
@@ -48,8 +50,8 @@ target_link_libraries(
     ServiceProviderSerLib
     ServiceProviderCodecLib
     JsonCodecLib
-    libMsg.lib
-    libSock.lib
+    libMsg
+    libSock
     ws2_32
 )
 
