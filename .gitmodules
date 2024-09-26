@@ -1,0 +1,6 @@
+[submodule "sock"]
+	path = sock
+	url = https://github.com/kwiato88/sock.git
+[submodule "msg"]
+	path = msg
+	url = https://github.com/kwiato88/msg.git
