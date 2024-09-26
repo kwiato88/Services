@@ -34,8 +34,8 @@ target_link_libraries(
     PrinterClientEx
     PrinterSerCodecLib
     JsonCodecLib
-    ServiceProviderCodecLib
     ServiceProviderClientLib
+    ServiceProviderCodecLib
     libMsg
     libSock
     ws2_32

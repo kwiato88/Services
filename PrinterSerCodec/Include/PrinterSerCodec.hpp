@@ -38,29 +38,16 @@ struct Serialization
 	{
 		throw ::JsonCodec::CodecError("Unextected message to decode");
 	}
-
-	template<>
-	static boost::property_tree::ptree toPtree<Print>(const Print& p_msg)
-	{
-		return encode_Print(p_msg);
-	}
-	template<>
-	static Print fromPtree<Print>(const boost::property_tree::ptree& p_data)
-	{
-		return decode_Print(p_data);
-	}
-
-	template<>
-	static boost::property_tree::ptree toPtree<Stop>(const Stop& p_msg)
-	{
-		return encode_Stop(p_msg);
-	}
-	template<>
-	static Stop fromPtree<Stop>(const boost::property_tree::ptree& p_data)
-	{
-		return decode_Stop(p_data);
-	}
 };
+
+template<>
+boost::property_tree::ptree Serialization::toPtree<Print>(const Print& p_msg);
+template<>
+Print Serialization::fromPtree<Print>(const boost::property_tree::ptree& p_data);
+template<>
+boost::property_tree::ptree Serialization::toPtree<Stop>(const Stop& p_msg);
+template<>
+Stop Serialization::fromPtree<Stop>(const boost::property_tree::ptree& p_data);
 
 using Codec = ::JsonCodec::Codec<IdConverter, Serialization>;
 

@@ -1,3 +1,4 @@
+#include <stdexcept>
 #include "PrinterSerMsg.hpp"
 
 namespace Networking

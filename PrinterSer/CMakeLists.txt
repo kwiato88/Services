@@ -35,10 +35,10 @@ target_link_libraries(
     PrinterSer
     PrinterSerCodecLib
     JsonCodecLib
-    ServiceProviderCodecLib
     ServiceProviderClientLib
-    libSock
+    ServiceProviderCodecLib
     libMsg
+    libSock
     ws2_32
 )
 

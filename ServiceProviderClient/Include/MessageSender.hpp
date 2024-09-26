@@ -17,13 +17,13 @@ public:
 	template<typename Codec, typename Ind>
 	void sendInd(const std::string& p_service, const Ind& p_msg)
 	{
-		clients.getWithCodec<Codec>(p_service).sendInd<Ind>(p_msg);
+		clients.getWithCodec<Codec>(p_service).template sendInd<Ind>(p_msg);
 	}
 
 	template<typename Codec, typename Req, typename Resp>
 	Resp sendReq(const std::string& p_service, const Req& p_msg)
 	{
-		return clients.getWithCodec<Codec>(p_service).sendReq<Req, Resp>(p_msg);
+		return clients.getWithCodec<Codec>(p_service).template sendReq<Req, Resp>(p_msg);
 	}
 
 	void sendInd(const std::string& p_service, const std::string& p_msg)
@@ -40,14 +40,14 @@ public:
 	void sendInd(const std::string& p_host, const std::string& p_port, const Ind& p_msg)
 	{
 		ClientWithCodec<Codec> client(msg::Client([=]() { return std::make_unique<msg::TcpIpConnection>(p_host, p_port); }));
-		client.sendInd<Ind>(p_msg);
+		client.template sendInd<Ind>(p_msg);
 	}
 
 	template<typename Codec, typename Req, typename Resp>
 	Resp sendReq(const std::string& p_host, const std::string& p_port, const Req& p_msg)
 	{
 		ClientWithCodec<Codec> client(msg::Client([=]() { return std::make_unique<msg::TcpIpConnection>(p_host, p_port); }));
-		return client.sendReq<Req, Resp>(p_msg);
+		return client.template sendReq<Req, Resp>(p_msg);
 	}
 
 	void sendInd(const std::string& p_host, const std::string& p_port, const std::string& p_msg)
