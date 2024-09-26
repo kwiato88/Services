@@ -15,7 +15,6 @@ public:
 	ServiceProvider(msg::ServerFacotry p_serverFacotry);
 
 private:
-	void onStopMsg();
 	AddrRegister addresses;
 };
 

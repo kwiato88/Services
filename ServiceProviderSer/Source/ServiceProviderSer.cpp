@@ -71,11 +71,6 @@ private:
 	AddrRegister& addresses;
 };
 
-void ServiceProvider::onStopMsg()
-{
-	std::cout << "Stop service addrs provider" << std::endl;
-}
-
 ServiceProvider::ServiceProvider(msg::ServerFacotry p_serverFacotry)
 	: BaseService(p_serverFacotry)
 {
