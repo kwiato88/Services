@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.0)
 
 project(PrinterClient)
 
@@ -15,8 +15,8 @@ target_include_directories(
     ../ServiceProviderSerCodec/Include
     ../PrinterSer/Include
     ../Utils/Include
-    ../sock/Include
     ../msg/Include
+    ../msg/sock/Include
     C:/Users/pikwiatk/boost_1_85_0
 )
 

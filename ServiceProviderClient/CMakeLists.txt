@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.0)
 
 project(ServiceProviderClient)
 
@@ -15,18 +15,18 @@ target_include_directories(
     Include
     ../ServiceProviderSerCodec/Include
     ../Utils/Include
-    ../sock/Include
     ../msg/Include
+    ../msg/sock/Include
     C:/Users/pikwiatk/boost_1_85_0
 )
 
 add_executable(
-    ClientEx
+    ServiceProviderClientEx
     Source/ClientAppEx.cpp
 )
 
 target_include_directories(
-    ClientEx
+    ServiceProviderClientEx
     PUBLIC
     Include
     ../ServiceProviderSerCodec/Include
@@ -37,7 +37,7 @@ target_include_directories(
 )
 
 add_dependencies(
-    ClientEx
+    ServiceProviderClientEx
     JsonCodecLib
     ServiceProviderCodecLib
     ServiceProviderClientLib
@@ -46,7 +46,7 @@ add_dependencies(
 )
 
 target_link_libraries(
-    ClientEx
+    ServiceProviderClientEx
     JsonCodecLib
     ServiceProviderCodecLib
     ServiceProviderClientLib
