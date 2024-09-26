@@ -19,7 +19,7 @@ struct Codec
 	using ExceptionType = CodecError;
 	using IdType = typename IdConverter::IdType;
 
-	static IdType idFromString(std::string& p_data)
+	static IdType idFromString(const std::string& p_data)
 	{
 		return IdConverter::fromString(p_data);
 	}
@@ -73,7 +73,7 @@ struct Codec
 	{
 		try
 		{
-			return encode_Message(T::id, Serialization::toPtree<T>(p_msg));
+			return encode_Message(T::id, Serialization::template toPtree<T>(p_msg));
 		}
 		catch (std::exception& e)
 		{
@@ -86,7 +86,7 @@ struct Codec
 	{
 		try
 		{
-			return Serialization::fromPtree<T>(decode_Message(T::id, p_msg));
+			return Serialization::template fromPtree<T>(decode_Message(T::id, p_msg));
 		}
 		catch (std::exception& e)
 		{

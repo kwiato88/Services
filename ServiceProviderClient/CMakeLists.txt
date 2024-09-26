@@ -48,8 +48,8 @@ add_dependencies(
 target_link_libraries(
     ServiceProviderClientEx
     JsonCodecLib
-    ServiceProviderCodecLib
     ServiceProviderClientLib
+    ServiceProviderCodecLib
     libMsg
     libSock
     ws2_32

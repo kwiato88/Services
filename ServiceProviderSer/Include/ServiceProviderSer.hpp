@@ -1,13 +1,14 @@
 #pragma once
 
 #include "ServiceProviderSerMsg.hpp"
+#include "ServiceProviderSerCodec.hpp"
 #include "AddrRegister.hpp"
 #include "MsgService.hpp"
 
 namespace Networking
 {
 
-typedef msg::Service<Networking::ServiceProviderMsg::ID> BaseService;
+typedef msg::Service<ServiceProviderMsg::Json::Codec> BaseService;
 class ServiceProvider : public BaseService
 {
 public:

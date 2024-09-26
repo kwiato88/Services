@@ -21,17 +21,15 @@ class SetServiceHandler : public msg::ReqHandler<ServiceProviderMsg::SetService,
 public:
 	SetServiceHandler(AddrRegister& p_addresses);
 	ServiceProviderMsg::ServiceAddr handle(const ServiceProviderMsg::SetService& p_msg);
-	void onError(std::exception& e);
 private:
 	AddrRegister& addresses;
 };
 
-class RemoveServiceHandler : public msg::IndicationHandler<ServiceProviderMsg::RemoveService>
+class RemoveServiceHandler : public msg::IndHandler<ServiceProviderMsg::RemoveService>
 {
 public:
 	RemoveServiceHandler(AddrRegister& p_addresses);
 	void handle(const ServiceProviderMsg::RemoveService& p_msg);
-	void onError(std::exception& e);
 private:
 	AddrRegister& addresses;
 };
@@ -41,7 +39,6 @@ class GetServiceHandler : public msg::ReqHandler<ServiceProviderMsg::GetServiceA
 public:
 	GetServiceHandler(AddrRegister& p_addresses);
 	ServiceProviderMsg::ServiceAddr handle(const ServiceProviderMsg::GetServiceAddr& p_msg);
-	void onError(std::exception& e);
 private:
 	AddrRegister& addresses;
 };
@@ -49,7 +46,7 @@ private:
 SetServiceHandler::SetServiceHandler(AddrRegister& p_addresses)
 	: addresses(p_addresses)
 {}
-ServiceProviderMsg::ServiceAddr  SetServiceHandler::handle(const ServiceProviderMsg::SetService& p_msg)
+ServiceProviderMsg::ServiceAddr SetServiceHandler::handle(const ServiceProviderMsg::SetService& p_msg)
 {
 	std::cout << "Try to register " << p_msg.name << " service at [" << p_msg.host << ":" << p_msg.port << "]" << std::endl;
 
@@ -61,10 +58,6 @@ ServiceProviderMsg::ServiceAddr  SetServiceHandler::handle(const ServiceProvider
 	std::cout << p_msg.name << " service registered at [" << resp.host << ":" << resp.port << "]" << std::endl;
 	return resp;
 }
-void SetServiceHandler::onError(std::exception& e)
-{
-	std::cerr << "Failed to set address. " << e.what() << std::endl;
-}
 
 RemoveServiceHandler::RemoveServiceHandler(AddrRegister& p_addresses)
 	: addresses(p_addresses)
@@ -73,10 +66,6 @@ void RemoveServiceHandler::handle(const ServiceProviderMsg::RemoveService& p_msg
 {
 	std::cout << "Try to release " << p_msg.name << " service" << std::endl;
 	addresses.remove(p_msg.name);
-}
-void RemoveServiceHandler::onError(std::exception& e)
-{
-	std::cerr << "Failed to remove service. " << e.what() << std::endl;
 }
 
 GetServiceHandler::GetServiceHandler(AddrRegister& p_addresses)
@@ -93,10 +82,6 @@ ServiceProviderMsg::ServiceAddr GetServiceHandler::handle(const ServiceProviderM
 
 	return resp;
 }
-void GetServiceHandler::onError(std::exception& e)
-{
-	std::cerr << "Failed to get address. " << e.what() << std::endl;
-}
 
 void ServiceProvider::onStopMsg()
 {
@@ -104,15 +89,17 @@ void ServiceProvider::onStopMsg()
 }
 
 ServiceProvider::ServiceProvider(msg::ServerFacotry p_serverFacotry)
-	: BaseService(p_serverFacotry, &Networking::ServiceProviderMsg::Json::Codec::getId)
+	: BaseService(p_serverFacotry)
 {
-	using JsonCodec = ServiceProviderMsg::Json::Codec;
-	using StopHandler = BaseService::StopHandler<ServiceProviderMsg::Stop>;
-	addIndHandler<StopHandler, JsonCodec>(std::make_unique<StopHandler>(*this, std::bind(&ServiceProvider::onStopMsg, this)));
-	addReqHandler<SetServiceHandler, JsonCodec>(std::make_unique<SetServiceHandler>(addresses));
-	addReqHandler<GetServiceHandler, JsonCodec>(std::make_unique<GetServiceHandler>(addresses));
-	addIndHandler<RemoveServiceHandler, JsonCodec>(std::make_unique<RemoveServiceHandler>(addresses));
-	setDefaultHandler(std::make_unique<LoggingHandler>());
+	//TODO: stop handler
+	//addIndHandler<StopHandler, JsonCodec>(std::make_unique<StopHandler>(*this, std::bind(&ServiceProvider::onStopMsg, this)));
+	addHandler<ServiceProviderMsg::SetService, ServiceProviderMsg::ServiceAddr>(
+		ServiceProviderMsg::SetService::id, std::make_shared<SetServiceHandler>(addresses));
+	addHandler<ServiceProviderMsg::GetServiceAddr, ServiceProviderMsg::ServiceAddr>(
+		ServiceProviderMsg::GetServiceAddr::id, std::make_shared<GetServiceHandler>(addresses));
+	addHandler<ServiceProviderMsg::RemoveService>(
+		ServiceProviderMsg::RemoveService::id, std::make_shared<RemoveServiceHandler>(addresses));
+	setDefaultHandler(std::make_shared<LoggingHandler>());
 }
 
 }

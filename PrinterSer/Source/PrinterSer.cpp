@@ -8,7 +8,7 @@
 namespace Networking
 {
 
-class PrintHandler : public msg::IndicationHandler<PrinterSerMsg::Print>
+class PrintHandler : public msg::IndHandler<PrinterSerMsg::Print>
 {
 public:
 	void handle(const PrinterSerMsg::Print& p_msg)
@@ -19,7 +19,7 @@ public:
 };
 
 Printer::Printer()
-	: BaseService(std::bind(&Printer::createServer, this), &PrinterSerMsg::Json::Codec::getId)
+	: BaseService(std::bind(&Printer::createServer, this))
 {
 	ServiceProviderClient provider;
 	auto addr = provider.setServiceAddr(name);
@@ -27,10 +27,9 @@ Printer::Printer()
 	port = addr.port;
 	std::cout << name << " registered at [" << host << ":" << port << "]" << std::endl;
 
-	using Codec = PrinterSerMsg::Json::Codec;
-	using StopHandler = BaseService::StopHandler<PrinterSerMsg::Stop>;
-	addIndHandler<PrintHandler, Codec>(std::make_unique<PrintHandler>(), BaseService::Processing::Async);
-	addIndHandler<StopHandler, Codec>(std::make_unique<StopHandler>(*this), BaseService::Processing::Async);
+	addHandler<PrinterSerMsg::Print>(std::make_shared<PrintHandler>());
+	// TODO: stop handler
+	//addIndHandler<StopHandler, Codec>(std::make_unique<StopHandler>(*this), BaseService::Processing::Async);
 }
 
 

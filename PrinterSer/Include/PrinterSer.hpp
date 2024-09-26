@@ -1,12 +1,13 @@
 #pragma once
 
 #include "PrinterSerMsg.hpp"
+#include "PrinterSerCodec.hpp"
 #include "MsgService.hpp"
 
 namespace Networking
 {
 
-using BaseService = msg::Service<PrinterSerMsg::ID>;
+using BaseService = msg::Service<PrinterSerMsg::Json::Codec>;
 class Printer : public BaseService
 {
 public:

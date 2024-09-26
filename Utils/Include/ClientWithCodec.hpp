@@ -14,23 +14,13 @@ public:
 	template<typename Ind>
 	void sendInd(const Ind& p_msg)
 	{
-		client.sendInd(Codec::encode<Ind>(p_msg));
-	}
-	template<>
-	void sendInd<std::string>(const std::string& p_msg)
-	{
-		client.sendInd(p_msg);
+		client.sendInd(Codec::template encode<Ind>(p_msg));
 	}
 
 	template<typename Req, typename Resp>
 	Resp sendReq(const Req& p_msg)
 	{
-		return Codec::decode<Resp>(client.sendReq(Codec::encode<Req>(p_msg)));
-	}
-	template<>
-	std::string sendReq<std::string, std::string>(const std::string& p_msg)
-	{
-		return client.sendReq(p_msg);
+		return Codec::template decode<Resp>(client.sendReq(Codec::template encode<Req>(p_msg)));
 	}
 private:
 	msg::Client client;
