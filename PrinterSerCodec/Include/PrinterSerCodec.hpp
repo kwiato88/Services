@@ -20,12 +20,6 @@ struct IdConverter
 	static std::string toString(ID p_id);
 };
 
-Print decode_Print(const boost::property_tree::ptree&);
-boost::property_tree::ptree encode_Print(const Print&);
-
-Stop decode_Stop(const boost::property_tree::ptree&);
-boost::property_tree::ptree encode_Stop(const Stop&);
-
 struct Serialization
 {
 	template<typename T>

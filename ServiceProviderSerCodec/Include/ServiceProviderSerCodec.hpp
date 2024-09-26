@@ -21,17 +21,6 @@ struct IdConverter
 	static std::string toString(ID p_id);
 };
 
-boost::property_tree::ptree encode_GetServiceAddr(const GetServiceAddr&);
-boost::property_tree::ptree encode_ServiceAddr(const ServiceAddr&);
-boost::property_tree::ptree encode_SetService(const SetService&);
-boost::property_tree::ptree encode_RemoveService(const RemoveService&);
-boost::property_tree::ptree encode_Stop(const Stop&);
-GetServiceAddr decode_GetServiceAddr(const boost::property_tree::ptree&);
-ServiceAddr decode_ServiceAddr(const boost::property_tree::ptree&);
-SetService  decode_SetService(const boost::property_tree::ptree&);
-RemoveService decode_RemoveService(const boost::property_tree::ptree&);
-Stop decode_Stop(const boost::property_tree::ptree&);
-
 struct Serialization
 {
 	template<typename T>

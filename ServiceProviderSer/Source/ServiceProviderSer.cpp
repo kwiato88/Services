@@ -19,8 +19,20 @@ public:
 class SetServiceHandler : public msg::ReqHandler<ServiceProviderMsg::SetService, ServiceProviderMsg::ServiceAddr>
 {
 public:
-	SetServiceHandler(AddrRegister& p_addresses);
-	ServiceProviderMsg::ServiceAddr handle(const ServiceProviderMsg::SetService& p_msg);
+	SetServiceHandler(AddrRegister& p_addresses) : addresses(p_addresses) {}
+	ServiceProviderMsg::ServiceAddr handle(const ServiceProviderMsg::SetService& p_msg)
+	{
+		std::cout << "Try to register " << p_msg.name << " service at [" << p_msg.host << ":" << p_msg.port << "]" << std::endl;
+
+		auto addr = addresses.add(p_msg.name, AddrRegister::Addr{ p_msg.host, p_msg.port });
+		ServiceProviderMsg::ServiceAddr resp = {};
+		resp.host = addr.host;
+		resp.port = addr.port;
+
+		std::cout << p_msg.name << " service registered at [" << resp.host << ":" << resp.port << "]" << std::endl;
+		return resp;
+	}
+
 private:
 	AddrRegister& addresses;
 };
@@ -28,8 +40,13 @@ private:
 class RemoveServiceHandler : public msg::IndHandler<ServiceProviderMsg::RemoveService>
 {
 public:
-	RemoveServiceHandler(AddrRegister& p_addresses);
-	void handle(const ServiceProviderMsg::RemoveService& p_msg);
+	RemoveServiceHandler(AddrRegister& p_addresses) : addresses(p_addresses) {}
+	void handle(const ServiceProviderMsg::RemoveService& p_msg)
+	{
+		std::cout << "Try to release " << p_msg.name << " service" << std::endl;
+		addresses.remove(p_msg.name);
+	}
+
 private:
 	AddrRegister& addresses;
 };
@@ -37,51 +54,22 @@ private:
 class GetServiceHandler : public msg::ReqHandler<ServiceProviderMsg::GetServiceAddr, ServiceProviderMsg::ServiceAddr>
 {
 public:
-	GetServiceHandler(AddrRegister& p_addresses);
-	ServiceProviderMsg::ServiceAddr handle(const ServiceProviderMsg::GetServiceAddr& p_msg);
+	GetServiceHandler(AddrRegister& p_addresses) : addresses(p_addresses) {}
+	ServiceProviderMsg::ServiceAddr handle(const ServiceProviderMsg::GetServiceAddr& p_msg)
+	{
+		std::cout << "Get " << p_msg.name << " service addr" << std::endl;
+
+		auto addr = addresses.get(p_msg.name);
+		ServiceProviderMsg::ServiceAddr resp = {};
+		resp.host = addr.host;
+		resp.port = addr.port;
+
+		return resp;
+	}
+
 private:
 	AddrRegister& addresses;
 };
-
-SetServiceHandler::SetServiceHandler(AddrRegister& p_addresses)
-	: addresses(p_addresses)
-{}
-ServiceProviderMsg::ServiceAddr SetServiceHandler::handle(const ServiceProviderMsg::SetService& p_msg)
-{
-	std::cout << "Try to register " << p_msg.name << " service at [" << p_msg.host << ":" << p_msg.port << "]" << std::endl;
-
-	auto addr = addresses.add(p_msg.name, AddrRegister::Addr{ p_msg.host, p_msg.port });
-	ServiceProviderMsg::ServiceAddr resp = {};
-	resp.host = addr.host;
-	resp.port = addr.port;
-
-	std::cout << p_msg.name << " service registered at [" << resp.host << ":" << resp.port << "]" << std::endl;
-	return resp;
-}
-
-RemoveServiceHandler::RemoveServiceHandler(AddrRegister& p_addresses)
-	: addresses(p_addresses)
-{}
-void RemoveServiceHandler::handle(const ServiceProviderMsg::RemoveService& p_msg)
-{
-	std::cout << "Try to release " << p_msg.name << " service" << std::endl;
-	addresses.remove(p_msg.name);
-}
-
-GetServiceHandler::GetServiceHandler(AddrRegister& p_addresses)
-	: addresses(p_addresses)
-{}
-ServiceProviderMsg::ServiceAddr GetServiceHandler::handle(const ServiceProviderMsg::GetServiceAddr& p_msg)
-{
-	std::cout << "Get " << p_msg.name << " service addr" << std::endl;
-
-	auto addr = addresses.get(p_msg.name);
-	ServiceProviderMsg::ServiceAddr resp = {};
-	resp.host = addr.host;
-	resp.port = addr.port;
-
-	return resp;
-}
 
 void ServiceProvider::onStopMsg()
 {
