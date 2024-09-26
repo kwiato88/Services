@@ -28,10 +28,8 @@ Printer::Printer()
 	std::cout << name << " registered at [" << host << ":" << port << "]" << std::endl;
 
 	addHandler<PrinterSerMsg::Print>(PrinterSerMsg::Print::id, std::make_shared<PrintHandler>());
-	// TODO: stop handler
-	//addIndHandler<StopHandler, Codec>(std::make_unique<StopHandler>(*this), BaseService::Processing::Async);
+	addHandler<PrinterSerMsg::Stop>(PrinterSerMsg::Stop::id, std::make_shared<BaseService::StopHandler<PrinterSerMsg::Stop> >(*this));
 }
-
 
 Printer::~Printer()
 {

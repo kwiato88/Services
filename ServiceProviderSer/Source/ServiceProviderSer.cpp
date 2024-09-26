@@ -79,14 +79,14 @@ void ServiceProvider::onStopMsg()
 ServiceProvider::ServiceProvider(msg::ServerFacotry p_serverFacotry)
 	: BaseService(p_serverFacotry)
 {
-	//TODO: stop handler
-	//addIndHandler<StopHandler, JsonCodec>(std::make_unique<StopHandler>(*this, std::bind(&ServiceProvider::onStopMsg, this)));
 	addHandler<ServiceProviderMsg::SetService, ServiceProviderMsg::ServiceAddr>(
 		ServiceProviderMsg::SetService::id, std::make_shared<SetServiceHandler>(addresses));
 	addHandler<ServiceProviderMsg::GetServiceAddr, ServiceProviderMsg::ServiceAddr>(
 		ServiceProviderMsg::GetServiceAddr::id, std::make_shared<GetServiceHandler>(addresses));
 	addHandler<ServiceProviderMsg::RemoveService>(
 		ServiceProviderMsg::RemoveService::id, std::make_shared<RemoveServiceHandler>(addresses));
+	addHandler<ServiceProviderMsg::Stop>(
+		ServiceProviderMsg::Stop::id, std::make_shared<BaseService::StopHandler<ServiceProviderMsg::Stop> >(*this));
 	setDefaultHandler(std::make_shared<LoggingHandler>());
 }
 
