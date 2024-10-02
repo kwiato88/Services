@@ -33,6 +33,7 @@ target_include_directories(
     ../Utils/Include
     ../sock/Include
     ../msg/Include
+    ../../
     C:/Users/pikwiatk/boost_1_85_0
 )
 

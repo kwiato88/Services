@@ -2,48 +2,7 @@
 
 #include "SockSocketUtils.hpp"
 #include "ServiceProviderClient.hpp"
-#include "SimpleUt.hpp"
-
-TEST(DummyPass)
-{
-	std::cout << "Dummy" << std::endl;
-}
-TEST(Fail)
-{
-	IS_EQ(1, 2);
-	IS_NOT_EQ(1, 1);
-	IS_TRUE(1==2);
-	int a=1, b=2;
-	IS_FALSE(a != b);
-}
-TEST(Pass)
-{
-	IS_EQ(1, 1);
-	IS_NOT_EQ(1, 2);
-	IS_TRUE(1 == 1);
-	int a=1, b=2;
-	IS_FALSE(a==b);
-}
-TEST(FailException)
-{
-	std::cout << "DummyFException" << std::endl;
-	throw std::runtime_error("Dummy");
-}
-TEST(PassException)
-{
-	std::cout << "pass1" << std::endl;
-	THROWS(throw std::exception());
-	std::cout << "pass2" << std::endl;
-}
-
-void dum() {}
-
-TEST(FailExpectThrowNoThrow)
-{
-	std::cout << "fail1" << std::endl;
-	THROWS(dum());
-	std::cout << "fail2" << std::endl;
-}
+#include "simpleUt/SimpleUt.hpp"
 
 TEST(getUnregisteredServiceShouldFail)
 {
@@ -140,18 +99,9 @@ TEST(stopProvider)
 
 int main()
 {
-	
 	MAIN_START;
-
-	//TODO: extract simpleUt with sample UT to separate repo
-	RUN_TEST(DummyPass);
-	RUN_TEST(FailException);
-	RUN_TEST(PassException);
-	RUN_TEST(FailExpectThrowNoThrow);
-	RUN_TEST(Fail);
-	RUN_TEST(Pass);
-
 	sock::init();
+
 	RUN_TEST(getUnregisteredServiceShouldFail);
 	RUN_TEST(shouldAssignDifferentAddrWhenRequestedIsnotAvailable);
 	RUN_TEST(registerAlreadyRegisteredServiceShouldFail);
@@ -163,7 +113,8 @@ int main()
 	RUN_TEST(removeNotExistingServiceShouldNotThrow);
 	RUN_TEST(removeAllServices);
 	RUN_TEST(stopProvider);
-	sock::cleanup();
 
+	sock::cleanup();
 	MAIN_END;
+	return 0;
 }
