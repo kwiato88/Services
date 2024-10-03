@@ -55,6 +55,36 @@ target_link_libraries(
     ws2_32
 )
 
+add_executable(
+    ServiceProviderSerTest
+    Source/AddrRegisterUt.cpp
+)
+
+target_include_directories(
+    ServiceProviderSerTest
+    PUBLIC
+    Include
+    ../ServiceProviderSerCodec/Include
+    ../Utils/Include
+    ../msg/Include
+    ../msg/sock/Include
+    ../../
+    C:/Users/pikwiatk/boost_1_85_0
+)
+
+add_dependencies(
+    ServiceProviderSerTest
+    ServiceProviderSerLib
+    libSock
+)
+
+target_link_libraries(
+    ServiceProviderSerTest
+    ServiceProviderSerLib
+    libSock
+    ws2_32
+)
+
 if( MSVC ) # VS2012 doesn't support correctly the tuples yet
     add_definitions( /D _VARIADIC_MAX=10 )
 endif()

@@ -43,7 +43,7 @@ public:
 	RemoveServiceHandler(AddrRegister& p_addresses) : addresses(p_addresses) {}
 	void handle(const ServiceProviderMsg::RemoveService& p_msg)
 	{
-		std::cout << "Try to release " << p_msg.name << " service" << std::endl;
+		std::cout << "Release " << p_msg.name << " service" << std::endl;
 		addresses.remove(p_msg.name);
 	}
 
