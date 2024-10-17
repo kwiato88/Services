@@ -10,6 +10,7 @@ add_subdirectory(ServiceProviderClient)
 add_subdirectory(PrinterSerCodec)
 add_subdirectory(PrinterSer)
 add_subdirectory(PrinterClient)
+add_subdirectory(Chatter)
 
 if( MSVC ) # VS2012 doesn't support correctly the tuples yet
     add_definitions( /D _VARIADIC_MAX=10 )

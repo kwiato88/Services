@@ -1,0 +1,53 @@
+@startuml
+
+== Register user ==
+
+Client1 -> Server : Register
+note over Server: assign unique cookie
+Client1 <- Server : Cookie
+note over Client1: store cookie
+
+
+== User on-line ==
+
+Client1 -> Server : OnLine\n  with stored cookie
+group opt
+	note over Server: if there are buffered messages for client
+	loop for each buffered message
+		Client1 <- Server: Message\n  from - userName\n  to - userName\n  message
+		Client1 --> Server
+	end
+end
+Client1 <- Server : Result\n  with result success/failure
+
+
+== Send message to client ==
+
+Client1 -> Server : Message\n  from - stored cookie\n  to - userName\n  message - msg with 1024 length limit
+alt sender or receiver are not registered
+	Client1 <- Server : MessageAck\n  UnknownUser
+	else receiver is on-line
+		Server -> Client2 : Message\n  from - userName\n  to - userName\n  message
+		Server <-- Client2
+		Client1 <- Server : MessageAck\n  Sent
+	else receiver is off-line
+		note over Server: buffer message
+		Client1 <- Server : MessageAck\n  Buffered
+	else other failure
+		Client1 <- Server : MessageAck\n  Failed
+end
+
+
+
+== User off-line ==
+
+Client1 -> Server : OffLine\n  with stored cookie
+Client1 <-- Server
+
+
+== Unregister user ==
+
+Client1 -> Server : UnRegister\n  with stored cookie
+Client1 <-- Server
+
+@enduml
