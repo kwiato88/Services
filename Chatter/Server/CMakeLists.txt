@@ -38,14 +38,18 @@ target_include_directories(
 add_dependencies(
     ChatterServerTests
     ChatterServerLib
-#    libSock
+    ChatterCodecLib
+    libMsg
+    libSock
 )
 
 target_link_libraries(
     ChatterServerTests
     ChatterServerLib
-#    libSock
-#    ws2_32
+    ChatterCodecLib
+    libMsg
+    libSock
+    ws2_32
 )
 
 if( MSVC ) # VS2012 doesn't support correctly the tuples yet

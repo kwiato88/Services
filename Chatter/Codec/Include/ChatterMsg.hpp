@@ -84,3 +84,4 @@ struct Stop
 } // namespace Chatter
 
 std::ostream& operator<<(std::ostream& p_out, const Chatter::Msg::ID& p_id);
+std::ostream& operator<<(std::ostream& p_out, const Chatter::Msg::MessageAck::Status& p_status);

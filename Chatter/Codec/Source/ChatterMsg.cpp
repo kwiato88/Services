@@ -57,3 +57,15 @@ std::ostream& operator<<(std::ostream& p_out, const Chatter::Msg::ID& p_id)
     p_out << Chatter::Msg::toString(p_id);
     return p_out;
 }
+std::ostream& operator<<(std::ostream& p_out, const Chatter::Msg::MessageAck::Status& p_status)
+{
+    switch (p_status)
+    {
+    case Chatter::Msg::MessageAck::Status::Sent: { p_out << "Success"; break; }
+    case Chatter::Msg::MessageAck::Status::Buffered: { p_out << "Buffered"; break; }
+    case Chatter::Msg::MessageAck::Status::UnknownUser: { p_out << "UnknownUser"; break; }
+    case Chatter::Msg::MessageAck::Status::Failed: { p_out << "Failed"; break; }
+    default: p_out << "-";
+    }
+    return p_out;
+}
