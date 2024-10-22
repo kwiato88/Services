@@ -5,6 +5,7 @@ add_library(
     STATIC
     Source/ChatterCookie.cpp
     Source/ChatterServer.cpp
+    Source/ChatterService.cpp
 )
 
 target_include_directories(
@@ -15,6 +16,8 @@ target_include_directories(
     ../../msg/Include
     ../../msg/sock/Include
     ../../Utils/Include
+    ../../ServiceProviderSerCodec/Include
+    ../../ServiceProviderClient/Include
     C:/Users/pikwiatk/boost_1_85_0
 )
 
@@ -47,6 +50,47 @@ target_link_libraries(
     ChatterServerTests
     ChatterServerLib
     ChatterCodecLib
+    libMsg
+    libSock
+    ws2_32
+)
+
+add_executable(
+    ChatterServerApp
+    Source/ChatterServiceMain.cpp
+)
+
+target_include_directories(
+    ChatterServerApp
+    PUBLIC
+    Include
+    ../Codec/Include
+    ../../msg/Include
+    ../../msg/sock/Include
+    ../../Utils/Include
+    ../../ServiceProviderSerCodec/Include
+    ../../ServiceProviderClient/Include
+    C:/Users/pikwiatk/boost_1_85_0
+)
+
+add_dependencies(
+    ChatterServerApp
+    ChatterServerLib
+    ChatterCodecLib
+    JsonCodecLib
+    ServiceProviderClientLib
+    ServiceProviderCodecLib
+    libMsg
+    libSock
+)
+
+target_link_libraries(
+    ChatterServerApp
+    ChatterServerLib
+    ChatterCodecLib
+    JsonCodecLib
+    ServiceProviderClientLib
+    ServiceProviderCodecLib
     libMsg
     libSock
     ws2_32
