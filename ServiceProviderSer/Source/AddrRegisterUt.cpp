@@ -126,8 +126,7 @@ int main()
     RUN_TEST(addServiceAgainWithDifferentAddr);
     RUN_TEST(addFreeAddrWhenRequestedIsUSed);
     RUN_TEST(addRequestedAddrWhenNotUsedAnumore);
-    
-    MAIN_END;
+
     sock::cleanup();
-    return 0;
+    MAIN_END;
 }

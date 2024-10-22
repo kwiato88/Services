@@ -7,14 +7,19 @@
 namespace Chatter
 {
 
-Server::User::User(const std::string& p_name)
-    : name(p_name), sendAction(&User::bufferMsg)
+Server::User::User(ConnectionFactory p_connections, const std::string& p_name)
+    : connections(p_connections), name(p_name), sendAction(&User::bufferMsg)
 {
 }
 
 bool Server::User::is(const std::string& p_name) const
 {
     return name == p_name;
+}
+
+std::string Server::User::getName() const
+{
+    return name;
 }
 
 void Server::User::sendBufferedMessages()
@@ -43,10 +48,8 @@ void Server::User::offline()
 
 Msg::MessageAck::Status Server::User::sendMsg(const Msg::Message& p_message)
 try{
-    auto msg = p_message;
-    msg.from = name;
-    Networking::ClientWithCodec<Msg::Json::Codec> client(msg::Client([=]() { return std::make_unique<msg::TcpIpConnection>(host, port); }));
-    client.sendInd(msg);
+    Networking::ClientWithCodec<Msg::Json::Codec> client(msg::Client([=]() { return connections(host, port); }));
+    client.sendInd(p_message);
     return Msg::MessageAck::Status::Sent;
 }
 catch(std::exception&)
@@ -69,6 +72,11 @@ Msg::MessageAck::Status Server::User::message(const Msg::Message& p_message)
     return (this->*sendAction)(p_message);
 }
 
+Server::Server(ConnectionFactory p_factory)
+    : connections(p_factory)
+{
+}
+
 bool Server::isRegistered(const Cookie& p_cookie) const
 {
     return users.find(p_cookie) != users.end();
@@ -88,7 +96,7 @@ try
         return Msg::Cookie{""};
     }
     auto cookie = cookies.allocateCookie();
-    users[cookie] = User{ p_msg.userName };
+    users[cookie] = User{ connections, p_msg.userName };
     return Msg::Cookie{ cookie.toString() };
 }
 catch(std::exception&)
@@ -143,8 +151,11 @@ Msg::MessageAck Server::handle(const Msg::Message& p_msg)
     {
         return Msg::MessageAck{Msg::MessageAck::Status::UnknownUser};
     }
-    auto& user = getUser(p_msg.to);
-    return Msg::MessageAck{ user.message(p_msg) };
+    auto& receiver = getUser(p_msg.to);
+    auto& sender = users[Cookie{p_msg.from}];
+    auto message = p_msg;
+    message.from = sender.getName();
+    return Msg::MessageAck{ receiver.message(message) };
 }
 
 } // namespace Chatter

@@ -116,5 +116,4 @@ int main()
 
 	sock::cleanup();
 	MAIN_END;
-	return 0;
 }

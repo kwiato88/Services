@@ -3,12 +3,17 @@
 #include <string>
 #include <map>
 #include <queue>
+#include <memory>
+#include <functional>
 #include "ChatterMsg.hpp"
 #include "ChatterCookie.hpp"
 #include "MsgReqHandler.hpp"
+#include "MsgConnection.hpp"
 
 namespace Chatter
 {
+
+using ConnectionFactory = std::function<std::unique_ptr<msg::Connection>(const std::string& host, const std::string& port)>;
 
 class Server
  : public msg::ReqHandler<Msg::Register, Msg::Cookie>,
@@ -18,6 +23,7 @@ class Server
    public msg::ReqHandler<Msg::Message, Msg::MessageAck>
 {
 public:
+    Server(ConnectionFactory p_factory);
     Msg::Cookie handle(const Msg::Register& p_msg);
     void handle(const Msg::UnRegister& p_msg);
     Msg::Result handle(const Msg::OnLine& p_msg);
@@ -28,8 +34,10 @@ private:
     class User
     {
     public:
-        User(const std::string& p_name = "");
+        User() = default;
+        User(ConnectionFactory p_factory, const std::string& p_name);
         bool is(const std::string& p_name) const;
+        std::string getName() const;
         void online(const std::string& p_host, const std::string& p_port);
         void offline();
         Msg::MessageAck::Status message(const Msg::Message& p_message);
@@ -40,6 +48,7 @@ private:
         void sendBufferedMessages();
         
         using SendFunction = Msg::MessageAck::Status (User::*)(const Msg::Message&);
+        ConnectionFactory connections;
         std::string name;
         std::string host;
         std::string port;
@@ -52,6 +61,7 @@ private:
     bool isRegistered(const std::string& p_userName) const;
     User& getUser(const std::string& p_userName);
 
+    ConnectionFactory connections;
     CookieStore cookies;
     std::map<Cookie, User> users;
 };
