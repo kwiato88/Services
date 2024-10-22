@@ -10,7 +10,7 @@ int main()
 		sock::init();
 		
 		{
-			std::cout << "Create priter service" << std::endl;
+			std::cout << "Printer: Create service" << std::endl;
 			Networking::Printer printer;
 			printer.start();
 		}
@@ -19,7 +19,7 @@ int main()
 	}
 	catch (std::exception& e)
 	{
-		std::cout << "Something went wrong: " << e.what() << std::endl;
+		std::cout << "Printer: Something went wrong: " << e.what() << std::endl;
 		sock::cleanup();
 		return 1;
 	}

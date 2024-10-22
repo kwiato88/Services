@@ -13,7 +13,7 @@ class PrintHandler : public msg::IndHandler<PrinterSerMsg::Print>
 public:
 	void handle(const PrinterSerMsg::Print& p_msg)
 	{
-		std::cout << "\n  PRINT" << std::endl;
+		std::cout << "\n  Printer::PRINT" << std::endl;
 		std::cout << p_msg.data << std::endl;
 	}
 };
@@ -25,7 +25,7 @@ Printer::Printer()
 	auto addr = provider.setServiceAddr(name);
 	host = addr.host;
 	port = addr.port;
-	std::cout << name << " registered at [" << host << ":" << port << "]" << std::endl;
+	std::cout << "Printer: " << name << " registered at [" << host << ":" << port << "]" << std::endl;
 
 	addHandler<PrinterSerMsg::Print>(PrinterSerMsg::Print::id, std::make_shared<PrintHandler>());
 	addHandler<PrinterSerMsg::Stop>(PrinterSerMsg::Stop::id, std::make_shared<BaseService::StopHandler<PrinterSerMsg::Stop> >(*this));
