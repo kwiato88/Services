@@ -80,8 +80,8 @@ ClientApp::~ClientApp()
 
 void ClientApp::run()
 {
-    std::cout << "Type <to>:<message> to send a message" << std::endl;
-    std::cout << "Type exit to quit" << std::endl;
+    static const std::string helpMessage = "Type <to>:<message> to send a message\nType exit to quit\n";
+    std::cout << helpMessage << std::endl;
     std::string line;
     while(std::getline(std::cin, line))
     {
@@ -95,8 +95,7 @@ void ClientApp::run()
         }
         if(line == "help")
         {
-            std::cout << "Type <to>:<message> to send a message" << std::endl;
-            std::cout << "Type exit to quit" << std::endl;
+            std::cout << helpMessage << std::endl;
             continue;
         }
         auto message = prepareMessage(line);
