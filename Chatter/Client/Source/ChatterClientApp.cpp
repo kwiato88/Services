@@ -1,4 +1,7 @@
 #include <iostream>
+#include <functional>
+#include <map>
+#include <tuple>
 #include "ChatterClientApp.hpp"
 #include "MsgClient.hpp"
 #include "MsgTcpIpConnection.hpp"
@@ -11,6 +14,65 @@ bool isOk(Msg::MessageAck::Status p_status)
     return p_status == Msg::MessageAck::Status::Sent 
        || p_status == Msg::MessageAck::Status::Buffered;
 }
+
+class Menu
+{
+public:
+    using Command = std::function<void(const std::string& p_line)>;
+    Menu() : defaultCommand([](const auto&){}), helpMessage("Type exit to quit\nType help for help\n")
+    {
+        commands["help"] = [this](const std::string&) { std::cout << helpMessage << std::endl; };
+    }
+    Menu& add(const std::string& p_name, const std::string& p_description, Command p_command)
+    {
+        helpMessage += p_description + "\n";
+        commands[p_name] = p_command;
+        return *this;
+    }
+    Menu& addDefault(const std::string& p_description, Command p_command)
+    {
+        helpMessage += p_description + "\n";
+        defaultCommand = p_command;
+        return *this;
+    }
+    void operator()()
+    {
+        std::string line;
+        while(std::getline(std::cin, line))
+        {
+            if(line.empty())
+            {
+                continue;
+            }
+            if(line == "exit")
+            {
+                break;
+            }
+            std::string command, args;
+            std::tie(command, args) = parseLine(line);
+            auto it = commands.find(command);
+            if(it != commands.end())
+            {
+                it->second(args);
+            }
+            else
+            {
+                defaultCommand(line);
+            }
+        }
+    }
+private:
+    std::tuple<std::string, std::string> parseLine(const std::string& p_line)
+    {
+        auto separator = p_line.find(' ');
+        auto command = p_line.substr(0, separator);
+        auto args = separator == std::string::npos ? "" : p_line.substr(separator + 1);
+        return {command, args};
+    }
+    std::map<std::string, Command> commands;
+    Command defaultCommand;
+    std::string helpMessage;
+};
 
 ClientApp::ClientApp(const std::string& p_name)
  : name(p_name), receiverServiceName(p_name + "@Chatter"),
@@ -54,13 +116,17 @@ catch(std::exception&)
 {}
 
 void ClientApp::goOffLine()
-try
 {
-    server.sendInd<Msg::OffLine>(Msg::OffLine{cookie});
+    try
+    {
+        server.sendInd<Msg::OffLine>(Msg::OffLine{cookie});
+    }
+    catch(std::exception&)
+    {}
+    stopReceiver();
+    addrs.removeServiceAddr(receiverServiceName);
     std::cout << name << " off-line" << std::endl;
 }
-catch(std::exception&)
-{}
 
 void ClientApp::stopReceiver()
 try
@@ -73,37 +139,26 @@ catch(std::exception&)
 ClientApp::~ClientApp()
 {
     goOffLine();
-    stopReceiver();
     unregisterAtServer();
-    addrs.removeServiceAddr(receiverServiceName);
 }
 
 void ClientApp::run()
 {
-    static const std::string helpMessage = "Type <to>:<message> to send a message\nType exit to quit\n";
-    std::cout << helpMessage << std::endl;
-    std::string line;
-    while(std::getline(std::cin, line))
+    Menu menu;
+    menu
+    .add("online",  "online: Go on-line", [this](const std::string&) { goOnLine(); })
+    .add("offline", "offline: Go off-line", [this](const std::string&) { goOffLine(); })
+    .addDefault("Type <to>:<message> to send a message", [this](const std::string& p_line){ sendMessage(p_line); });
+    menu();
+}
+
+void ClientApp::sendMessage(const std::string& p_line)
+{
+    auto message = prepareMessage(p_line);
+    if(!message.message.empty() && !message.to.empty())
     {
-        if(line.empty())
-        {
-            continue;
-        }
-        if(line == "exit")
-        {
-            break;
-        }
-        if(line == "help")
-        {
-            std::cout << helpMessage << std::endl;
-            continue;
-        }
-        auto message = prepareMessage(line);
-        if(!message.message.empty() && !message.to.empty())
-        {
-            sendToReceiver(message);
-            sendToServer(message);
-        }
+        sendToReceiver(message);
+        sendToServer(message);
     }
 }
 

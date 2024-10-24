@@ -21,6 +21,7 @@ private:
     void goOnLine();
     void goOffLine();
     void stopReceiver();
+    void sendMessage(const std::string& p_line);
     Msg::Message prepareMessage(const std::string& p_line);
     void sendToReceiver(Msg::Message p_msg);
     void sendToServer(Msg::Message p_msg);
