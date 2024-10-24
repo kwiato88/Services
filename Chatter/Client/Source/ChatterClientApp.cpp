@@ -2,6 +2,7 @@
 #include <functional>
 #include <map>
 #include <tuple>
+#include <cstdlib>
 #include "ChatterClientApp.hpp"
 #include "MsgClient.hpp"
 #include "MsgTcpIpConnection.hpp"
@@ -37,6 +38,7 @@ public:
     }
     void operator()()
     {
+        commands["help"]("");
         std::string line;
         while(std::getline(std::cin, line))
         {
@@ -98,7 +100,9 @@ void ClientApp::registerAtServer()
 void ClientApp::goOnLine()
 {
     auto receiverAddr = addrs.setServiceAddr(receiverServiceName);
+    std::cout << name << " recevier addr [" << receiverAddr.host << ":" << receiverAddr.port << "]" << std::endl;
     receiver = Client{msg::Client([=]() { return std::make_unique<msg::TcpIpConnection>(receiverAddr.host, receiverAddr.port); })};
+    system("pause"); //TODO: should start receiver process/thread; started manually for now
     if(!server.sendReq<Msg::OnLine, Msg::Result>(Msg::OnLine{cookie, receiverAddr.host, receiverAddr.port}).success)
     {
         throw std::runtime_error("Failed to go on-line with ChatterServer");
