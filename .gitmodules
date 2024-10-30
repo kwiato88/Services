@@ -1,3 +1,6 @@
 [submodule "msg"]
 	path = msg
 	url = https://github.com/kwiato88/msg.git
+[submodule "WinApi"]
+	path = WinApi
+	url = https://github.com/kwiato88/WinApi.git
