@@ -1,9 +1,16 @@
 #include <iostream>
 #include <ChatterClientApp.hpp>
 #include <SockSocketUtils.hpp>
+#include "ChatterClientDialog.hpp"
+
+WinApi::InstanceHandle hModule;
 
 int main(int argc, char* argv[])
 {
+    WinApi::ChatterClientDialog dlg(hModule, WinApi::Handle(0));
+    dlg.show();
+    return 0;
+
     if (argc != 2)
     {
         std::cerr << "Chatter: Usage: " << argv[0] << " <clientName>" << std::endl;

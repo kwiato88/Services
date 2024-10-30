@@ -58,6 +58,8 @@ target_link_libraries(
 add_executable(
     ChatterClientApp
     Source/ChatterClientMain.cpp
+    Source/ChatterClientDialog.cpp
+    Resource/ChatterClientDialog.rc
 )
 
 target_include_directories(
@@ -68,6 +70,7 @@ target_include_directories(
     ../../msg/Include
     ../../msg/sock/Include
     ../../Utils/Include
+    ../../WinApi/Include
     ../../ServiceProviderSerCodec/Include
     ../../ServiceProviderClient/Include
     C:/Users/pikwiatk/boost_1_85_0
@@ -82,6 +85,7 @@ add_dependencies(
     JsonCodecLib
     libMsg
     libSock
+    winApiUtils
 )
 
 target_link_libraries(
@@ -93,5 +97,6 @@ target_link_libraries(
     ServiceProviderCodecLib
     libMsg
     libSock
+    winApiUtils
     ws2_32
 )

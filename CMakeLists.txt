@@ -4,6 +4,7 @@ project(Services)
 
 add_subdirectory(msg)
 add_subdirectory(Utils)
+add_subdirectory(WinApi)
 add_subdirectory(ServiceProviderSerCodec)
 add_subdirectory(ServiceProviderSer)
 add_subdirectory(ServiceProviderClient)
