@@ -16,7 +16,7 @@ int main(int argc, char* argv[])
             std::string host = argv[1];
             std::string port = argv[2];
             std::cout << "Chatter: setup client receiver at [" << host << ":" << port << "]" << std::endl;
-            Chatter::ClientReceiver receiver(host, port);
+            Chatter::ClientReceiver receiver(host, port, [](const auto& p_msg){std::cout << "=== " << p_msg.from << " ===\n" << p_msg.message << std::endl;});
             receiver.start();
             std::cout << "Chatter: client receiver finished" << std::endl;
         }

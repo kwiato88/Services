@@ -6,19 +6,25 @@
 namespace Chatter
 {
 
-class MessagePrinter : public msg::IndHandler<Msg::Message>
+class MessageHandler : public msg::IndHandler<Msg::Message>
 {
 public:
+    MessageHandler(std::function<void(const Msg::Message&)> p_onMessageReceived)
+    : onMessageReceived(p_onMessageReceived)
+    {}
     void handle(const Msg::Message& p_msg) override
     {
-        std::cout << "=== " << p_msg.from << " ===\n" << p_msg.message << std::endl;
+        onMessageReceived(p_msg);
     }
+private:
+    std::function<void(const Msg::Message&)> onMessageReceived;
 };
 
-ClientReceiver::ClientReceiver(const std::string& p_host, const std::string& p_port)
+ClientReceiver::ClientReceiver(const std::string& p_host, const std::string& p_port,
+    std::function<void(const Msg::Message&)> p_onMessageReceived)
     : BaseService([=]() { return std::make_unique<msg::TcpIpServer>(p_host, p_port); })
 {
-    addHandler<Msg::Message>(Msg::Message::id, std::make_shared<MessagePrinter>());
+    addHandler<Msg::Message>(Msg::Message::id, std::make_shared<MessageHandler>(p_onMessageReceived));
     addHandler<Msg::Stop>(Msg::Stop::id, std::make_shared<StopHandler<Msg::Stop> >(*this));
 }
 

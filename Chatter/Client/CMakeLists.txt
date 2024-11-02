@@ -15,6 +15,7 @@ target_include_directories(
     ../../msg/Include
     ../../msg/sock/Include
     ../../Utils/Include
+    ../../WinApi/Include
     ../../ServiceProviderSerCodec/Include
     ../../ServiceProviderClient/Include
     C:/Users/pikwiatk/boost_1_85_0
@@ -60,6 +61,7 @@ add_executable(
     Source/ChatterClientMain.cpp
     Source/ChatterClientDialog.cpp
     Resource/ChatterClientDialog.rc
+    ../../WinApi/Resource/QueryDialog.rc
 )
 
 target_include_directories(

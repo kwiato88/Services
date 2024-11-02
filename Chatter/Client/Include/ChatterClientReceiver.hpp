@@ -11,10 +11,8 @@ using BaseService = msg::Service<Msg::Json::Codec>;
 class ClientReceiver : public BaseService
 {
 public:
-    ClientReceiver(const std::string& p_host, const std::string& p_port);
-
-private:
-
+    ClientReceiver(const std::string& p_host, const std::string& p_port,
+        std::function<void(const Msg::Message&)> p_onMessageReceived);
 };
 
 }

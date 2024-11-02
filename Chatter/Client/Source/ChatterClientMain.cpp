@@ -7,10 +7,6 @@ WinApi::InstanceHandle hModule;
 
 int main(int argc, char* argv[])
 {
-    WinApi::ChatterClientDialog dlg(hModule, WinApi::Handle(0));
-    dlg.show();
-    return 0;
-
     if (argc != 2)
     {
         std::cerr << "Chatter: Usage: " << argv[0] << " <clientName>" << std::endl;
@@ -22,8 +18,8 @@ int main(int argc, char* argv[])
         {
             std::string name{argv[1]};
             std::cout << "Chatter: start client " << name << std::endl;
-            Chatter::ClientApp app(name);
-            app.run();
+            WinApi::ChatterClientDialog dlg(hModule, WinApi::Handle(0), name);
+            dlg.show();
             std::cout << "Chatter: client " << name << " finished" << std::endl;
         }
         sock::cleanup();
