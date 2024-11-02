@@ -134,9 +134,10 @@ void ClientApp::Receiver::receiverMain()
     receiver.start();
 }
 
-ClientApp::ClientApp(const std::string& p_name)
+ClientApp::ClientApp(const std::string& p_name, std::function<void()> p_onMessageReceived)
  : name(p_name), receiverServiceName(p_name + "@Chatter"),
-   server(msg::Client([]() { return std::make_unique<msg::TcpIpConnection>("host", "port"); })), activeChat(0)
+   server(msg::Client([]() { return std::make_unique<msg::TcpIpConnection>("host", "port"); })),
+   activeChat(0), onMessageReceived(p_onMessageReceived)
 {
     serverAddr = addrs.getServiceAddr("ChatterService");
     server = Client{msg::Client([=]() { return std::make_unique<msg::TcpIpConnection>(serverAddr.host, serverAddr.port); })};
@@ -297,9 +298,11 @@ std::size_t ClientApp::findChatWith(const std::string& p_name) const
 }
 void ClientApp::receivedMessage(const Msg::Message& p_message)
 {
+    //TODO: mutex
     auto chat = newChat(p_message.from);
     chats.at(chat).add(p_message.from, p_message.message);
-    //TODO: mark new msg in UI
+    onMessageReceived();
+    //TODO: remove
     std::cout << "=== " << p_message.from << " ===\n" << p_message.message << std::endl;
 }
 

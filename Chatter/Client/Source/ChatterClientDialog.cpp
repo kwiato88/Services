@@ -20,35 +20,31 @@ void errorMessage(Handle p_parent, const std::string& p_msg)
 }
 
 ChatterClientDialog::ChatterClientDialog(InstanceHandle p_hInstance, Handle p_parentWindow, const std::string& p_userName)
-    : Dialog(p_hInstance, p_parentWindow, ResourceId(ID_CHATTER_CLIENT_DIALOG)), chatter(p_userName), name(p_userName)
+    : Dialog(p_hInstance, p_parentWindow, ResourceId(ID_CHATTER_CLIENT_DIALOG)),
+      chatter(p_userName, std::bind(&ChatterClientDialog::notifyMessageReceived, this)), name(p_userName)
 {
     registerHandler(MsgMatchers::ButtonClick(ID_BUTTON_SEND), std::bind(&ChatterClientDialog::onSendClick, this));
     registerHandler(MsgMatchers::ButtonClick(ID_BUTTON_ADD), std::bind(&ChatterClientDialog::onAddChatClick, this));
     registerHandler(MsgMatchers::ButtonClick(ID_BUTTON_REMOVE), std::bind(&ChatterClientDialog::onRemoveChatClick, this));
     registerHandler(MsgMatchers::MsgCodeAndValue(ID_LIST_CHATS, LBN_DBLCLK), std::bind(&ChatterClientDialog::onChatSelected, this));
-    //TODO: enter key on message
+    //TODO: enter key on message (*)
     // dialog receive message WM_KEYDOWN
     // with code ith code VK_RETURN
     // and current focus is on edit control (GetFocus() == ownHandle in Control)
     //   handle enter key
     //   return TRUE from dialoc func
     // else return FALSE from dialog func (let system deal with message)
-    //TODO: enter/delete key on chats VK_RETURN/VK_DELETE
+    //TODO: enter/delete key on chats VK_RETURN/VK_DELETE (*)
     //  same as key on message
-    //TODO: context menu
-    //  on chats: copy, add, remove
-    //TODO: update on msg receive
-    //  thread to send/post messge to dialog
-    //  dialog to receive message and update chat
-    // SendMessage - blocking
-    // PostMessage - non-blocking
-    // WM_USER + n - custom message
-    // WM_APP (0x8000) through 0xBFFF - private app message <--
-    //TODO: dialog to allow register handler for msg
+    //TODO: enter key on message sent/insert new line
+    //TODO: update on msg receive (*)
+    //  register handler (onMessageReceived) for message WN_CHATTER_MESSAGE_RECEIVED
+    //TODO: online/offline button
+
+    // WinApi extension
+    //TODO: dialog to allow register handler for msg *
     //  matcher(msgCode, lParam, wParam(hi, lo)), handler
     //TODO: refactor registering for control events
-    //TODO: online/offline button
-    //TODO: enter key on message sent/insert new line
 }
 
 void ChatterClientDialog::onInit()
@@ -129,6 +125,17 @@ void ChatterClientDialog::onChatSelected()
         return;
     chatter.chatWith(selected);
     updateCurrentChat();
+}
+
+void ChatterClientDialog::onMessageReceived()
+{
+    updateChatList();
+    updateCurrentChat();
+}
+
+void  ChatterClientDialog::notifyMessageReceived()
+{
+    PostMessage(m_self, WM_CHATTER_MESSAGE_RECEIVED, 0, 0);
 }
 
 void ChatterClientDialog::updateChatList()

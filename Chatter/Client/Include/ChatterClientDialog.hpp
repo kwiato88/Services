@@ -19,6 +19,8 @@ private:
     void onAddChatClick();
     void onRemoveChatClick();
     void onChatSelected();
+    void onMessageReceived();
+    void notifyMessageReceived();
     void updateChatList();
     void updateCurrentChat();
     void goOnLine();
@@ -27,7 +29,7 @@ private:
     void copyAllUserNames();
     void copySelectedChat();
 
-
+    static const UINT WM_CHATTER_MESSAGE_RECEIVED = WM_APP + 1;
     Control::Edit curretnChat;
     Control::Edit message;
     Control::Edit userName;

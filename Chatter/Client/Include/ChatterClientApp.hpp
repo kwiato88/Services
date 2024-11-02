@@ -14,7 +14,7 @@ namespace Chatter
 class ClientApp
 {
 public:
-    ClientApp(const std::string& p_name);
+    ClientApp(const std::string& p_name, std::function<void()> p_onMessageReceived);
     ~ClientApp();
     std::string goOnLine();
     void goOffLine();
@@ -83,6 +83,7 @@ private:
     Networking::ServiceProviderMsg::ServiceAddr serverAddr;
     std::vector<Chat> chats;
     std::size_t activeChat;
+    std::function<void()> onMessageReceived;
 };
 
 }
