@@ -229,6 +229,12 @@ std::vector<std::string> ClientApp::getChats() const
     std::transform(chats.begin(), chats.end(), names.begin(), [](const auto& c) { return c.with(); });
     return names;
 }
+std::string ClientApp::getChatWith(std::size_t p_idx) const
+{
+    if(p_idx >= chats.size())
+        return "";
+    return chats.at(p_idx).with();
+}
 std::string ClientApp::getCurrentChat() const
 {
     if(chats.empty())

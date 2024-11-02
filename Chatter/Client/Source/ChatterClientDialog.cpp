@@ -3,6 +3,8 @@
 #include "DialogMsgMatchers.hpp"
 #include "MessageDialog.hpp"
 #include "QueryDialog.hpp"
+#include "ContextMenu.hpp"
+#include "Clipboard.hpp"
 
 namespace WinApi
 {
@@ -36,6 +38,17 @@ ChatterClientDialog::ChatterClientDialog(InstanceHandle p_hInstance, Handle p_pa
     //TODO: context menu
     //  on chats: copy, add, remove
     //TODO: update on msg receive
+    //  thread to send/post messge to dialog
+    //  dialog to receive message and update chat
+    // SendMessage - blocking
+    // PostMessage - non-blocking
+    // WM_USER + n - custom message
+    // WM_APP (0x8000) through 0xBFFF - private app message <--
+    //TODO: dialog to allow register handler for msg
+    //  matcher(msgCode, lParam, wParam(hi, lo)), handler
+    //TODO: refactor registering for control events
+    //TODO: online/offline button
+    //TODO: enter key on message sent/insert new line
 }
 
 void ChatterClientDialog::onInit()
@@ -130,6 +143,43 @@ void ChatterClientDialog::updateCurrentChat()
     curretnChat.setContent(chatter.getCurrentChat());
     //TODO: scroll to end
     //TODO: scroll bar
+}
+
+bool ChatterClientDialog::showContextMenu(int p_xPos, int p_yPos)
+{
+    if (chats.isWithin(p_xPos, p_yPos))
+    {
+        ContextMenu menu(m_self);
+        menu.add(ContextMenu::Item{ "Start new chat" , std::bind(&ChatterClientDialog::onAddChatClick, this) });
+        menu.add(ContextMenu::Item{ "Remove chat" , std::bind(&ChatterClientDialog::onRemoveChatClick, this) });
+        menu.add(ContextMenu::Item{ "Copy user name" , std::bind(&ChatterClientDialog::copySelectetUserName, this) });
+        menu.add(ContextMenu::Item{ "Copy all user names" , std::bind(&ChatterClientDialog::copyAllUserNames, this) });
+        menu.add(ContextMenu::Item{ "Copy chat" , std::bind(&ChatterClientDialog::copySelectedChat, this) });
+        menu.show(p_xPos, p_yPos);
+        return true;
+    }
+    return false;
+}
+
+void ChatterClientDialog::copySelectetUserName()
+{
+    Clipboard::set(Clipboard::String(chats.selectedItem()));
+}
+
+void ChatterClientDialog::copyAllUserNames()
+{
+    std::string out;
+    for (int i = 0; i < chats.size(); ++i)
+        out += "\n";
+        //out += chats. + "\n"; TODO: get item by index
+    Clipboard::set(Clipboard::String(out));
+}
+
+void ChatterClientDialog::copySelectedChat()
+{
+    auto selected = chats.selectedIndex();
+    if(selected != -1)
+        Clipboard::set(Clipboard::String(chatter.getChatWith(selected)));
 }
 
 }

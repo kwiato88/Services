@@ -22,6 +22,11 @@ private:
     void updateChatList();
     void updateCurrentChat();
     void goOnLine();
+    bool showContextMenu(int p_xPos, int p_yPos) override;
+    void copySelectetUserName();
+    void copyAllUserNames();
+    void copySelectedChat();
+
 
     Control::Edit curretnChat;
     Control::Edit message;

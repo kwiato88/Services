@@ -20,6 +20,7 @@ public:
     void goOffLine();
     void sendMessage(const std::string& p_message);
     std::vector<std::string> getChats() const;
+    std::string getChatWith(std::size_t p_idx) const;
     std::string getCurrentChat() const;
     std::size_t getCurrentChatIdx() const;
     void chatWith(std::size_t p_idx);
