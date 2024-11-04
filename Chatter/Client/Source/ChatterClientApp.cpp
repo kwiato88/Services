@@ -234,7 +234,7 @@ std::string ClientApp::getChatWith(std::size_t p_idx) const
 {
     if(p_idx >= chats.size())
         return "";
-    return chats.at(p_idx).with();
+    return chats.at(p_idx).toString();
 }
 std::string ClientApp::getCurrentChat() const
 {

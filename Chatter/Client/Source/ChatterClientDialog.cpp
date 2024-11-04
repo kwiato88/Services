@@ -27,6 +27,7 @@ ChatterClientDialog::ChatterClientDialog(InstanceHandle p_hInstance, Handle p_pa
     registerHandler(MsgMatchers::ButtonClick(ID_BUTTON_ADD), std::bind(&ChatterClientDialog::onAddChatClick, this));
     registerHandler(MsgMatchers::ButtonClick(ID_BUTTON_REMOVE), std::bind(&ChatterClientDialog::onRemoveChatClick, this));
     registerHandler(MsgMatchers::MsgCodeAndValue(ID_LIST_CHATS, LBN_DBLCLK), std::bind(&ChatterClientDialog::onChatSelected, this));
+    registerHandler(MsgMatchers::MsgCodeAndValue(1015, 1015), std::bind(&ChatterClientDialog::onMessageReceived, this)); //TODO: remove
     //TODO: enter key on message (*)
     // dialog receive message WM_KEYDOWN
     // with code ith code VK_RETURN
@@ -79,6 +80,7 @@ try
 catch(std::exception& e)
 {
     errorMessage(m_self, std::string("Can't send message: ") + e.what());
+    updateCurrentChat();
     message.setContent("");
 }
 
@@ -135,7 +137,8 @@ void ChatterClientDialog::onMessageReceived()
 
 void  ChatterClientDialog::notifyMessageReceived()
 {
-    PostMessage(m_self, WM_CHATTER_MESSAGE_RECEIVED, 0, 0);
+    //PostMessage(m_self, WM_CHATTER_MESSAGE_RECEIVED, 0, 0);
+    PostMessage(m_self, WM_COMMAND, MAKELONG(1015,1015), 0); //TODO: remove
 }
 
 void ChatterClientDialog::updateChatList()
@@ -175,11 +178,10 @@ void ChatterClientDialog::copySelectetUserName()
 
 void ChatterClientDialog::copyAllUserNames()
 {
-    std::string out;
-    for (int i = 0; i < chats.size(); ++i)
-        out += "\n";
-        //out += chats. + "\n"; TODO: get item by index
-    Clipboard::set(Clipboard::String(out));
+    std::string names;
+    for(const auto& name : chatter.getChats())
+        names += name + "\n";
+    Clipboard::set(Clipboard::String(names));
 }
 
 void ChatterClientDialog::copySelectedChat()
