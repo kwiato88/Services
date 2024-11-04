@@ -4,6 +4,7 @@
 #include "Dialog.hpp"
 #include "ControlEdit.hpp"
 #include "ControlList.hpp"
+#include "ControlCheckBox.hpp"
 #include "ChatterClientApp.hpp"
 
 namespace WinApi
@@ -23,6 +24,7 @@ private:
     void notifyMessageReceived();
     void updateChatList();
     void updateCurrentChat();
+    void onLineChanged();
     void goOnLine();
     bool showContextMenu(int p_xPos, int p_yPos) override;
     void copySelectetUserName();
@@ -35,6 +37,8 @@ private:
     Control::Edit userName;
     Control::Edit receiverAddr;
     Control::List chats;
+    Control::CheckBox isOnline;
+    Control::CheckBox shouldSendOnEnter;
     Chatter::ClientApp chatter;
     std::string name;
 };

@@ -171,6 +171,7 @@ catch(std::exception&)
 {}
 
 void ClientApp::goOffLine()
+try
 {
     if(receiver)
     {
@@ -178,6 +179,8 @@ void ClientApp::goOffLine()
         addrs.removeServiceAddr(receiverServiceName);
     }
 }
+catch(std::exception&)
+{}
 
 ClientApp::~ClientApp()
 {
@@ -186,7 +189,7 @@ ClientApp::~ClientApp()
 }
 
 ClientApp::Chat::Chat(const std::string& p_withUser)
- : withUser(p_withUser)
+ : withUser(p_withUser), unreadCount(0)
 {}
 
 std::string ClientApp::Chat::toString() const
@@ -196,10 +199,21 @@ std::string ClientApp::Chat::toString() const
 void ClientApp::Chat::add(const std::string& p_user, const std::string& p_message)
 {
     messages.push_back(std::string("=== ") + p_user + " ===\r\n" + p_message + "\r\n");
+    ++unreadCount;
+}
+void ClientApp::Chat::read()
+{
+    unreadCount = 0;
 }
 std::string ClientApp::Chat::with() const
 {
     return withUser;
+}
+std::string ClientApp::Chat::header() const
+{
+    if(unreadCount == 0)
+        return withUser;
+    return withUser + " (" + std::to_string(unreadCount) + ")";
 }
 
 void ClientApp::sendMessage(const std::string& p_message)
@@ -229,7 +243,7 @@ std::vector<std::string> ClientApp::getChats() const
 {
     WinApi::ScopedLock lock(chatsLock);
     std::vector<std::string> names{chats.size(), ""};
-    std::transform(chats.begin(), chats.end(), names.begin(), [](const auto& c) { return c.with(); });
+    std::transform(chats.begin(), chats.end(), names.begin(), [](const auto& c) { return c.header(); });
     return names;
 }
 std::string ClientApp::getChatWith(std::size_t p_idx) const
@@ -253,8 +267,10 @@ std::size_t ClientApp::getCurrentChatIdx() const
 void ClientApp::chatWith(std::size_t p_idx)
 {
     WinApi::ScopedLock lock(chatsLock);
-    if(p_idx < chats.size())
-        activeChat = p_idx; 
+    if(p_idx >= chats.size())
+        return;
+    activeChat = p_idx;
+    chats.at(activeChat).read();
 }
 std::size_t ClientApp::newChatWithoutLock(const std::string& p_name)
 {
@@ -313,6 +329,8 @@ void ClientApp::receivedMessage(const Msg::Message& p_message)
         WinApi::ScopedLock lock(chatsLock);
         auto chat = newChatWithoutLock(p_message.from);
         chats.at(chat).add(p_message.from, p_message.message);
+        if(chat == activeChat)
+            chats.at(chat).read();
     }
     onMessageReceived();
     //TODO: remove debug prints

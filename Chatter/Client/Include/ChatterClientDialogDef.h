@@ -16,5 +16,7 @@
 #define ID_BUTTON_ADD            1011
 #define ID_BUTTON_REMOVE         1012
 #define ID_BUTTON_SEND           1013
+#define ID_CHECK_SEND_ON_ENTER   1014
+#define ID_CHECK_ON_LINE         1015
 
 #endif

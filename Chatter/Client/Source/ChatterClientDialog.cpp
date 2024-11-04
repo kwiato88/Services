@@ -28,6 +28,7 @@ ChatterClientDialog::ChatterClientDialog(InstanceHandle p_hInstance, Handle p_pa
     registerHandler(MsgMatchers::ButtonClick(ID_BUTTON_REMOVE), std::bind(&ChatterClientDialog::onRemoveChatClick, this));
     registerHandler(MsgMatchers::MsgCodeAndValue(ID_LIST_CHATS, LBN_DBLCLK), std::bind(&ChatterClientDialog::onChatSelected, this));
     registerHandler(MsgMatchers::MsgCodeAndValue(1015, 1015), std::bind(&ChatterClientDialog::onMessageReceived, this)); //TODO: remove
+    registerHandler(MsgMatchers::MsgCodeAndValue(ID_CHECK_ON_LINE, BN_CLICKED), std::bind(&ChatterClientDialog::onLineChanged, this));
     //TODO: enter key on message (*)
     // dialog receive message WM_KEYDOWN
     // with code ith code VK_RETURN
@@ -37,7 +38,6 @@ ChatterClientDialog::ChatterClientDialog(InstanceHandle p_hInstance, Handle p_pa
     // else return FALSE from dialog func (let system deal with message)
     //TODO: enter/delete key on chats VK_RETURN/VK_DELETE (*)
     //  same as key on message
-    //TODO: enter key on message sent/insert new line
     //TODO: update on msg receive (*)
     //  register handler (onMessageReceived) for message WN_CHATTER_MESSAGE_RECEIVED
     //TODO: online/offline button
@@ -55,19 +55,37 @@ void ChatterClientDialog::onInit()
     userName.init(getItem(ResourceId(ID_EDIT_USER_NAME)));
     receiverAddr.init(getItem(ResourceId(ID_EDIT_ADDRESS)));
     chats.init(getItem(ResourceId(ID_LIST_CHATS)));
+    isOnline.init(getItem(ResourceId(ID_CHECK_ON_LINE)));
+    shouldSendOnEnter.init(getItem(ResourceId(ID_CHECK_SEND_ON_ENTER)));
+    shouldSendOnEnter.check();
+    isOnline.uncheck();
     userName.setContent(name);
     receiverAddr.setContent("off-line");
     goOnLine();
+    chats.setFocus();;
 }
 
 void ChatterClientDialog::goOnLine()
 try
 {
     receiverAddr.setContent(chatter.goOnLine());
+    isOnline.check();
 }
 catch(std::exception& e)
 {
+    isOnline.uncheck();
     errorMessage(m_self, std::string("Can't go on-line: ") + e.what());
+}
+
+void ChatterClientDialog::onLineChanged()
+{
+    if(isOnline.isChecked())
+        goOnLine();
+    else
+    {
+       chatter.goOffLine();
+       receiverAddr.setContent("off-line");
+    }
 }
 
 void ChatterClientDialog::onSendClick()
@@ -126,6 +144,7 @@ void ChatterClientDialog::onChatSelected()
     if(selected == -1)
         return;
     chatter.chatWith(selected);
+    updateChatList();
     updateCurrentChat();
 }
 
@@ -146,13 +165,13 @@ void ChatterClientDialog::updateChatList()
     chats.clear();
     chats.addItems(chatter.getChats());
     chats.selectIndex(chatter.getCurrentChatIdx());
+    //TODO: scroll bar
 }
 
 void ChatterClientDialog::updateCurrentChat()
 {
     curretnChat.setContent(chatter.getCurrentChat());
     //TODO: scroll to end
-    //TODO: scroll bar
 }
 
 bool ChatterClientDialog::showContextMenu(int p_xPos, int p_yPos)

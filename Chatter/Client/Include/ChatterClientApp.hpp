@@ -63,10 +63,13 @@ private:
         Chat& operator=(Chat&&) = default;
         std::string toString() const;
         std::string with() const;
+        std::string header() const;
         void add(const std::string& p_user, const std::string& p_message);
+        void read();
     private:
         std::string withUser;
         std::vector<std::string> messages;
+        std::size_t unreadCount;
     };
 
     void registerAtServer();
