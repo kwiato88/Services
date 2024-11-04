@@ -7,6 +7,7 @@
 #include "ChatterCodec.hpp"
 #include "ServiceProviderClient.hpp"
 #include "WinApiThread.hpp"
+#include "WinApiMutex.hpp"
 
 namespace Chatter
 {
@@ -72,7 +73,7 @@ private:
     void unregisterAtServer();
     std::size_t findChatWith(const std::string& p_name) const;
     void sendToServer(const std::string& p_message);
-
+    std::size_t newChatWithoutLock(const std::string& p_name);
     
     const std::string name;
     const std::string receiverServiceName;
@@ -84,6 +85,7 @@ private:
     std::vector<Chat> chats;
     std::size_t activeChat;
     std::function<void()> onMessageReceived;
+    mutable WinApi::Mutex chatsLock;
 };
 
 }

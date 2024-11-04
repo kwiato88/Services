@@ -204,7 +204,8 @@ std::string ClientApp::Chat::with() const
 
 void ClientApp::sendMessage(const std::string& p_message)
 {
-    if(chats.empty())
+    WinApi::ScopedLock lock(chatsLock);
+    if(chats.empty() || p_message.empty())
         return;
     chats.at(activeChat).add(name, p_message);
     sendToServer(p_message);
@@ -226,18 +227,21 @@ void ClientApp::sendToServer(const std::string& p_message)
 }
 std::vector<std::string> ClientApp::getChats() const
 {
+    WinApi::ScopedLock lock(chatsLock);
     std::vector<std::string> names{chats.size(), ""};
     std::transform(chats.begin(), chats.end(), names.begin(), [](const auto& c) { return c.with(); });
     return names;
 }
 std::string ClientApp::getChatWith(std::size_t p_idx) const
 {
+    WinApi::ScopedLock lock(chatsLock);
     if(p_idx >= chats.size())
         return "";
     return chats.at(p_idx).toString();
 }
 std::string ClientApp::getCurrentChat() const
 {
+    WinApi::ScopedLock lock(chatsLock);
     if(chats.empty())
         return "";
     return chats.at(activeChat).toString();
@@ -248,10 +252,11 @@ std::size_t ClientApp::getCurrentChatIdx() const
 }
 void ClientApp::chatWith(std::size_t p_idx)
 {
+    WinApi::ScopedLock lock(chatsLock);
     if(p_idx < chats.size())
         activeChat = p_idx; 
 }
-std::size_t ClientApp::newChat(const std::string& p_name)
+std::size_t ClientApp::newChatWithoutLock(const std::string& p_name)
 {
     std::cout << "new :" << p_name << std::endl;
     for(const auto& c : chats)
@@ -271,8 +276,14 @@ std::size_t ClientApp::newChat(const std::string& p_name)
     std::cout << std::endl;
     return chats.size() - 1;
 }
+std::size_t ClientApp::newChat(const std::string& p_name)
+{
+    WinApi::ScopedLock lock(chatsLock);
+    return newChatWithoutLock(p_name);
+}
 void ClientApp::removeChat(std::size_t p_idx)
 {
+    WinApi::ScopedLock lock(chatsLock);
     std::cout << "remove :" << p_idx << std::endl;
     for(const auto& c : chats)
         std::cout << c.with() << "|";
@@ -298,11 +309,13 @@ std::size_t ClientApp::findChatWith(const std::string& p_name) const
 }
 void ClientApp::receivedMessage(const Msg::Message& p_message)
 {
-    //TODO: mutex
-    auto chat = newChat(p_message.from);
-    chats.at(chat).add(p_message.from, p_message.message);
+    {
+        WinApi::ScopedLock lock(chatsLock);
+        auto chat = newChatWithoutLock(p_message.from);
+        chats.at(chat).add(p_message.from, p_message.message);
+    }
     onMessageReceived();
-    //TODO: remove
+    //TODO: remove debug prints
     std::cout << "=== " << p_message.from << " ===\n" << p_message.message << std::endl;
 }
 
