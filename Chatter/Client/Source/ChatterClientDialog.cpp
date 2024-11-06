@@ -40,7 +40,6 @@ ChatterClientDialog::ChatterClientDialog(InstanceHandle p_hInstance, Handle p_pa
     //  same as key on message
     //TODO: update on msg receive (*)
     //  register handler (onMessageReceived) for message WN_CHATTER_MESSAGE_RECEIVED
-    //TODO: online/offline button
 
     // WinApi extension
     //TODO: dialog to allow register handler for msg *
@@ -94,12 +93,14 @@ try
     chatter.sendMessage(message.getContent());
     updateCurrentChat();
     message.setContent("");
+    message.setFocus();
 }
 catch(std::exception& e)
 {
     errorMessage(m_self, std::string("Can't send message: ") + e.what());
     updateCurrentChat();
     message.setContent("");
+    message.setFocus();
 }
 
 void ChatterClientDialog::onAddChatClick()
@@ -165,7 +166,7 @@ void ChatterClientDialog::updateChatList()
     chats.clear();
     chats.addItems(chatter.getChats());
     chats.selectIndex(chatter.getCurrentChatIdx());
-    //TODO: scroll bar
+    //TODO: horizontal scroll bar
 }
 
 void ChatterClientDialog::updateCurrentChat()
