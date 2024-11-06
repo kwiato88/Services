@@ -42,9 +42,7 @@ ChatterClientDialog::ChatterClientDialog(InstanceHandle p_hInstance, Handle p_pa
     //  register handler (onMessageReceived) for message WN_CHATTER_MESSAGE_RECEIVED
 
     // WinApi extension
-    //TODO: dialog to allow register handler for msg *
-    //  matcher(msgCode, lParam, wParam(hi, lo)), handler
-    //TODO: refactor registering for control events
+    //TODO: connect matchers with control type
 }
 
 void ChatterClientDialog::onInit()
