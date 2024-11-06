@@ -26,9 +26,9 @@ ChatterClientDialog::ChatterClientDialog(InstanceHandle p_hInstance, Handle p_pa
     registerHandler(MsgMatchers::ButtonClick(ID_BUTTON_SEND), std::bind(&ChatterClientDialog::onSendClick, this));
     registerHandler(MsgMatchers::ButtonClick(ID_BUTTON_ADD), std::bind(&ChatterClientDialog::onAddChatClick, this));
     registerHandler(MsgMatchers::ButtonClick(ID_BUTTON_REMOVE), std::bind(&ChatterClientDialog::onRemoveChatClick, this));
-    registerHandler(MsgMatchers::MsgCodeAndValue(ID_LIST_CHATS, LBN_DBLCLK), std::bind(&ChatterClientDialog::onChatSelected, this));
-    registerHandler(MsgMatchers::MsgCodeAndValue(1015, 1015), std::bind(&ChatterClientDialog::onMessageReceived, this)); //TODO: remove
-    registerHandler(MsgMatchers::MsgCodeAndValue(ID_CHECK_ON_LINE, BN_CLICKED), std::bind(&ChatterClientDialog::onLineChanged, this));
+    registerHandler(MsgMatchers::CmdCodeAndValue(ID_LIST_CHATS, LBN_DBLCLK), std::bind(&ChatterClientDialog::onChatSelected, this));
+    registerHandler(MsgMatchers::Message(WM_CHATTER_MESSAGE_RECEIVED), std::bind(&ChatterClientDialog::onMessageReceived, this));
+    registerHandler(MsgMatchers::CmdCodeAndValue(ID_CHECK_ON_LINE, BN_CLICKED), std::bind(&ChatterClientDialog::onLineChanged, this));
     //TODO: enter key on message (*)
     // dialog receive message WM_KEYDOWN
     // with code ith code VK_RETURN
@@ -40,9 +40,6 @@ ChatterClientDialog::ChatterClientDialog(InstanceHandle p_hInstance, Handle p_pa
     //  same as key on message
     //TODO: update on msg receive (*)
     //  register handler (onMessageReceived) for message WN_CHATTER_MESSAGE_RECEIVED
-
-    // WinApi extension
-    //TODO: connect matchers with control type
 }
 
 void ChatterClientDialog::onInit()
@@ -155,8 +152,7 @@ void ChatterClientDialog::onMessageReceived()
 
 void  ChatterClientDialog::notifyMessageReceived()
 {
-    //PostMessage(m_self, WM_CHATTER_MESSAGE_RECEIVED, 0, 0);
-    PostMessage(m_self, WM_COMMAND, MAKELONG(1015,1015), 0); //TODO: remove
+    PostMessage(m_self, WM_CHATTER_MESSAGE_RECEIVED, 0, 0);
 }
 
 void ChatterClientDialog::updateChatList()
@@ -164,13 +160,14 @@ void ChatterClientDialog::updateChatList()
     chats.clear();
     chats.addItems(chatter.getChats());
     chats.selectIndex(chatter.getCurrentChatIdx());
+    chats.scrollToLine(chatter.getCurrentChatIdx());
     //TODO: horizontal scroll bar
 }
 
 void ChatterClientDialog::updateCurrentChat()
 {
     curretnChat.setContent(chatter.getCurrentChat());
-    //TODO: scroll to end
+    curretnChat.scrollToBottom();
 }
 
 bool ChatterClientDialog::showContextMenu(int p_xPos, int p_yPos)
