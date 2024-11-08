@@ -222,6 +222,7 @@ void ClientApp::sendMessage(const std::string& p_message)
     if(chats.empty() || p_message.empty())
         return;
     chats.at(activeChat).add(name, p_message);
+    chats.at(activeChat).read();
     sendToServer(p_message);
 }
 

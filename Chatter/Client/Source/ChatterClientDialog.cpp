@@ -27,19 +27,24 @@ ChatterClientDialog::ChatterClientDialog(InstanceHandle p_hInstance, Handle p_pa
     registerHandler(MsgMatchers::ButtonClick(ID_BUTTON_ADD), std::bind(&ChatterClientDialog::onAddChatClick, this));
     registerHandler(MsgMatchers::ButtonClick(ID_BUTTON_REMOVE), std::bind(&ChatterClientDialog::onRemoveChatClick, this));
     registerHandler(MsgMatchers::CmdCodeAndValue(ID_LIST_CHATS, LBN_DBLCLK), std::bind(&ChatterClientDialog::onChatSelected, this));
+    registerHandler(MsgMatchers::MsgKeyDownOnControl(chats, VK_RETURN), std::bind(&ChatterClientDialog::onChatSelected, this)); //TODO: not working
+    registerHandler(MsgMatchers::MsgKeyDownOnControl(chats, VK_DELETE), std::bind(&ChatterClientDialog::onRemoveChatClick, this)); //TODO: not working
     registerHandler(MsgMatchers::Message(WM_CHATTER_MESSAGE_RECEIVED), std::bind(&ChatterClientDialog::onMessageReceived, this));
     registerHandler(MsgMatchers::CmdCodeAndValue(ID_CHECK_ON_LINE, BN_CLICKED), std::bind(&ChatterClientDialog::onLineChanged, this));
-    //TODO: enter key on message (*)
+    //TODO: enter key on message
+    // 1.
+    // SetWindowLongPtrA to change style
+    //   with ES_WANTRETURN - enter new line
+    //   without ES_WANTRETURN - send message (Send button set as default in rc file)
+    // 2. onhold
     // dialog receive message WM_KEYDOWN
     // with code ith code VK_RETURN
     // and current focus is on edit control (GetFocus() == ownHandle in Control)
     //   handle enter key
     //   return TRUE from dialoc func
     // else return FALSE from dialog func (let system deal with message)
-    //TODO: enter/delete key on chats VK_RETURN/VK_DELETE (*)
-    //  same as key on message
-    //TODO: update on msg receive (*)
-    //  register handler (onMessageReceived) for message WN_CHATTER_MESSAGE_RECEIVED
+    //TODO: enter/delete key on chats VK_RETURN/VK_DELETE
+    //  same as key on message 2.
 }
 
 void ChatterClientDialog::onInit()
