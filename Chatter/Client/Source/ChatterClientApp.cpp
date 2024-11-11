@@ -275,22 +275,12 @@ void ClientApp::chatWith(std::size_t p_idx)
 }
 std::size_t ClientApp::newChatWithoutLock(const std::string& p_name)
 {
-    std::cout << "new :" << p_name << std::endl;
-    for(const auto& c : chats)
-        std::cout << c.with() << "|";
-    std::cout << std::endl;
     auto found = findChatWith(p_name);
     if(found != chats.size())
     {
-        for(const auto& c : chats)
-            std::cout << c.with() << "|";
-        std::cout << std::endl;
         return found;
     }
     chats.push_back(Chat{p_name});
-    for(const auto& c : chats)
-        std::cout << c.with() << "|";
-    std::cout << std::endl;
     return chats.size() - 1;
 }
 std::size_t ClientApp::newChat(const std::string& p_name)
@@ -301,10 +291,6 @@ std::size_t ClientApp::newChat(const std::string& p_name)
 void ClientApp::removeChat(std::size_t p_idx)
 {
     WinApi::ScopedLock lock(chatsLock);
-    std::cout << "remove :" << p_idx << std::endl;
-    for(const auto& c : chats)
-        std::cout << c.with() << "|";
-    std::cout << std::endl;
     if(p_idx >= chats.size())
         return;
     auto activeChatName = chats.at(activeChat).with();
@@ -312,10 +298,6 @@ void ClientApp::removeChat(std::size_t p_idx)
     activeChat = findChatWith(activeChatName);
     if(activeChat == chats.size())
         activeChat = 0;
-    for(const auto& c : chats)
-        std::cout << c.with() << "|";
-    std::cout << std::endl;
-    std::cout << "active " << activeChat << std::endl;
 }
 std::size_t ClientApp::findChatWith(const std::string& p_name) const
 {
@@ -334,8 +316,6 @@ void ClientApp::receivedMessage(const Msg::Message& p_message)
             chats.at(chat).read();
     }
     onMessageReceived();
-    //TODO: remove debug prints
-    std::cout << "=== " << p_message.from << " ===\n" << p_message.message << std::endl;
 }
 
 }
