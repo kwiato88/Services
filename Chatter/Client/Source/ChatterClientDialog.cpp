@@ -31,11 +31,7 @@ ChatterClientDialog::ChatterClientDialog(InstanceHandle p_hInstance, Handle p_pa
     registerHandler(MsgMatchers::MsgKeyDownOnControl(chats, VK_DELETE), std::bind(&ChatterClientDialog::onRemoveChatClick, this)); //TODO: not working
     registerHandler(MsgMatchers::Message(WM_CHATTER_MESSAGE_RECEIVED), std::bind(&ChatterClientDialog::onMessageReceived, this));
     registerHandler(MsgMatchers::CmdCodeAndValue(ID_CHECK_ON_LINE, BN_CLICKED), std::bind(&ChatterClientDialog::onLineChanged, this));
-    //TODO: enter key on message
-    // 1.
-    // SetWindowLongPtrA to change style
-    //   with ES_WANTRETURN - enter new line
-    //   without ES_WANTRETURN - send message (Send button set as default in rc file)
+    registerHandler(MsgMatchers::CmdCodeAndValue(ID_CHECK_SEND_ON_ENTER, BN_CLICKED), std::bind(&ChatterClientDialog::changeEnterBahaviour, this));
     // 2. onhold
     // dialog receive message WM_KEYDOWN
     // with code ith code VK_RETURN
@@ -85,6 +81,15 @@ void ChatterClientDialog::onLineChanged()
        chatter.goOffLine();
        receiverAddr.setContent("off-line");
     }
+}
+
+void ChatterClientDialog::changeEnterBahaviour()
+{
+    if(shouldSendOnEnter.isChecked())
+        message.dontAcceptNewLine();
+    else
+        message.acceptNewLine();
+    message.setFocus();
 }
 
 void ChatterClientDialog::onSendClick()

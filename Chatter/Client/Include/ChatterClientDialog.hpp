@@ -30,6 +30,7 @@ private:
     void copySelectetUserName();
     void copyAllUserNames();
     void copySelectedChat();
+    void changeEnterBahaviour();
 
     static const UINT WM_CHATTER_MESSAGE_RECEIVED = WM_APP + 1;
     Control::Edit curretnChat;
