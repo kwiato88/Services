@@ -74,6 +74,36 @@ UnRegister Serialization::fromPtree<UnRegister>(const boost::property_tree::ptre
     return msg;
 }
 template<>
+boost::property_tree::ptree Serialization::toPtree<Login>(const Login& p_msg)
+{
+    boost::property_tree::ptree msg;
+    msg.put("userName", p_msg.userName);
+    msg.put("password", p_msg.password);
+    return msg;
+}
+template<>
+Login Serialization::fromPtree<Login>(const boost::property_tree::ptree& p_data)
+{
+    Login msg = {};
+    msg.userName = p_data.get<std::string>("userName", "");
+    msg.password = p_data.get<std::string>("password", "");
+    return msg;
+}
+template<>
+boost::property_tree::ptree Serialization::toPtree<Logout>(const Logout& p_msg)
+{
+    boost::property_tree::ptree msg;
+    msg.put("cookie", p_msg.cookie);
+    return msg;
+}
+template<>
+Logout Serialization::fromPtree<Logout>(const boost::property_tree::ptree& p_data)
+{
+    Logout msg = {};
+    msg.cookie = p_data.get<std::string>("cookie", "");
+    return msg;
+}
+template<>
 boost::property_tree::ptree Serialization::toPtree<OnLine>(const OnLine& p_msg)
 {
     boost::property_tree::ptree msg;

@@ -12,7 +12,7 @@ Service::Service()
       chatter(std::make_shared<Server>([](const auto& p_host, const auto& p_port) { return std::make_unique<msg::TcpIpConnection>(p_host, p_port); }))
 {
     setup();
-    add<Msg::Register, Msg::Cookie>();
+    add<Msg::Register, Msg::Result>();
     add<Msg::UnRegister>();
     add<Msg::OnLine, Msg::Result>();
     add<Msg::OffLine>();

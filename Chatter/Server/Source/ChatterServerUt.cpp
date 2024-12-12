@@ -101,29 +101,64 @@ TEST(genearesDifferentCookies)
     IS_NOT_EQ(cookie2.toString(), cookie3.toString());
 }
 
-TEST(registerUserSecondTimeWillReturnEmptyCookie)
+TEST(registerUserSecondTimeWillFail)
 {
     ExchangeData data;
     Chatter::Server chatter(StubConnectionFactory{data});
-    IS_FALSE(chatter.handle(Chatter::Msg::Register{"MyUser"}).cookie.empty());
-    IS_TRUE(chatter.handle(Chatter::Msg::Register{"MyUser"}).cookie.empty());
+    IS_TRUE(chatter.handle(Chatter::Msg::Register{"MyUser"}).success);
+    IS_FALSE(chatter.handle(Chatter::Msg::Register{"MyUser"}).success);
+}
+
+TEST(loginUnregisteredUserWillFail)
+{
+    ExchangeData data;
+    Chatter::Server chatter(StubConnectionFactory{data});
+    IS_TRUE(chatter.handle(Chatter::Msg::Login{"MyUser", "pass"}).cookie.empty());
+}
+
+TEST(loginRegisteredUserWillReturnCookie)
+{
+    ExchangeData data;
+    Chatter::Server chatter(StubConnectionFactory{data});
+    chatter.handle(Chatter::Msg::Register{"MyUser"});
+    IS_FALSE(chatter.handle(Chatter::Msg::Login{"MyUser", "pass"}).cookie.empty());
+}
+
+TEST(loginSecondTimeWillFail)
+{
+    ExchangeData data;
+    Chatter::Server chatter(StubConnectionFactory{data});
+    chatter.handle(Chatter::Msg::Register{"MyUser"});
+    chatter.handle(Chatter::Msg::Login{"MyUser", "pass"});
+    IS_EQ("0", chatter.handle(Chatter::Msg::Login{"MyUser", "pass"}).cookie);
+}
+
+TEST(loginAfyerLogoutWillReturnCookie)
+{
+    ExchangeData data;
+    Chatter::Server chatter(StubConnectionFactory{data});
+    chatter.handle(Chatter::Msg::Register{"MyUser"});
+    chatter.handle(Chatter::Msg::Login{"MyUser", "pass"});
+    chatter.handle(Chatter::Msg::Logout{"MyUser"});
+    IS_FALSE(chatter.handle(Chatter::Msg::Login{"MyUser", "pass"}).cookie.empty());
 }
 
 TEST(registerUnregisteredUser)
 {
     ExchangeData data;
     Chatter::Server chatter(StubConnectionFactory{data});
-    auto cookie = chatter.handle(Chatter::Msg::Register{"MyUser"});
-    IS_FALSE(cookie.cookie.empty());
+    chatter.handle(Chatter::Msg::Register{"MyUser"});
+    auto cookie = chatter.handle(Chatter::Msg::Login{"MyUser", "pass"});
     chatter.handle(Chatter::Msg::UnRegister{cookie.cookie});
-    IS_FALSE(chatter.handle(Chatter::Msg::Register{"MyUser"}).cookie.empty());
+    IS_TRUE(chatter.handle(Chatter::Msg::Register{"MyUser"}).success);
 }
 
 TEST(onlineWillReturnTrue)
 {
     ExchangeData data;
     Chatter::Server chatter(StubConnectionFactory{data});
-    auto cookie = chatter.handle(Chatter::Msg::Register{"MyUser"});
+    chatter.handle(Chatter::Msg::Register{"MyUser"});
+    auto cookie = chatter.handle(Chatter::Msg::Login{"MyUser", "pass"});
     IS_TRUE(chatter.handle(Chatter::Msg::OnLine{cookie.cookie, "127.0.0.1", "50000"}).success);
 }
 
@@ -134,6 +169,14 @@ TEST(onlineUnregisteredUserWillReturnFalse)
     IS_FALSE(chatter.handle(Chatter::Msg::OnLine{"MyUser", "127.0.0.1", "50000"}).success);
 }
 
+TEST(onlineUnloggedUserWillReturnFalse)
+{
+    ExchangeData data;
+    Chatter::Server chatter(StubConnectionFactory{data});
+    chatter.handle(Chatter::Msg::Register{"MyUser"});
+    IS_FALSE(chatter.handle(Chatter::Msg::OnLine{"MyUser", "127.0.0.1", "50000"}).success);
+}
+
 TEST(sendMessageFromUnknownUserWillFail)
 {
     ExchangeData data;
@@ -141,22 +184,58 @@ TEST(sendMessageFromUnknownUserWillFail)
     IS_EQ(Chatter::Msg::MessageAck::Status::UnknownUser, chatter.handle(Chatter::Msg::Message{"Sender", "Receiver", "Hello"}).status);
 }
 
+TEST(sendMessageFromUnloggedUserWillFail)
+{
+    ExchangeData data;
+    Chatter::Server chatter(StubConnectionFactory{data});
+    chatter.handle(Chatter::Msg::Register{"Sender"});
+    IS_EQ(Chatter::Msg::MessageAck::Status::UnknownUser, chatter.handle(Chatter::Msg::Message{"Sender", "Receiver", "Hello"}).status);
+}
+
 TEST(sendMessageToUnknownUserWillFail)
 {
     ExchangeData data;
     Chatter::Server chatter(StubConnectionFactory{data});
-    auto sender = chatter.handle(Chatter::Msg::Register{"Sender"});
+    chatter.handle(Chatter::Msg::Register{"Sender"});
+    auto sender = chatter.handle(Chatter::Msg::Login{"Sender", "pass"});
     chatter.handle(Chatter::Msg::OnLine{sender.cookie, "127.0.0.1", "50000"});
     IS_EQ(Chatter::Msg::MessageAck::Status::UnknownUser, chatter.handle(Chatter::Msg::Message{sender.cookie, "Receiver", "Hello"}).status);
+}
+
+TEST(sendMessageToNotLoggedUserWillReturnBufferdStatus)
+{
+    ExchangeData data;
+    Chatter::Server chatter(StubConnectionFactory{data});
+    chatter.handle(Chatter::Msg::Register{"Sender"});
+    chatter.handle(Chatter::Msg::Register{"Receiver"});
+    auto sender = chatter.handle(Chatter::Msg::Login{"Sender", "pass"});
+    chatter.handle(Chatter::Msg::OnLine{sender.cookie, "127.0.0.1", "50000"});
+    IS_EQ(Chatter::Msg::MessageAck::Status::Buffered, chatter.handle(Chatter::Msg::Message{sender.cookie, "Receiver", "Hello"}).status);
 }
 
 TEST(sendMessageToOfflineUserWillReturnBufferdStatus)
 {
     ExchangeData data;
     Chatter::Server chatter(StubConnectionFactory{data});
-    auto sender = chatter.handle(Chatter::Msg::Register{"Sender"});
-    auto receiver = chatter.handle(Chatter::Msg::Register{"Receiver"});
+    chatter.handle(Chatter::Msg::Register{"Sender"});
+    chatter.handle(Chatter::Msg::Register{"Receiver"});
+    auto sender = chatter.handle(Chatter::Msg::Login{"Sender", "pass"});
+    chatter.handle(Chatter::Msg::Login{"Receiver", "pass"});
     chatter.handle(Chatter::Msg::OnLine{sender.cookie, "127.0.0.1", "50000"});
+    IS_EQ(Chatter::Msg::MessageAck::Status::Buffered, chatter.handle(Chatter::Msg::Message{sender.cookie, "Receiver", "Hello"}).status);
+}
+
+TEST(sendMessageToLoggedoutUserWillReturnBufferdStatus)
+{
+    ExchangeData data;
+    Chatter::Server chatter(StubConnectionFactory{data});
+    chatter.handle(Chatter::Msg::Register{"Sender"});
+    chatter.handle(Chatter::Msg::Register{"Receiver"});
+    auto sender = chatter.handle(Chatter::Msg::Login{"Sender", "pass"});
+    auto receiver = chatter.handle(Chatter::Msg::Login{"Receiver", "pass"});
+    chatter.handle(Chatter::Msg::OnLine{sender.cookie, "127.0.0.1", "50000"});
+    chatter.handle(Chatter::Msg::OnLine{receiver.cookie, "127.0.0.1", "50001"});
+    chatter.handle(Chatter::Msg::Logout{receiver.cookie});
     IS_EQ(Chatter::Msg::MessageAck::Status::Buffered, chatter.handle(Chatter::Msg::Message{sender.cookie, "Receiver", "Hello"}).status);
 }
 
@@ -164,8 +243,10 @@ TEST(sendMessageToUserSwitchedToOfflineWillReturnBufferdStatus)
 {
     ExchangeData data;
     Chatter::Server chatter(StubConnectionFactory{data});
-    auto sender = chatter.handle(Chatter::Msg::Register{"Sender"});
-    auto receiver = chatter.handle(Chatter::Msg::Register{"Receiver"});
+    chatter.handle(Chatter::Msg::Register{"Sender"});
+    chatter.handle(Chatter::Msg::Register{"Receiver"});
+    auto sender = chatter.handle(Chatter::Msg::Login{"Sender", "pass"});
+    auto receiver = chatter.handle(Chatter::Msg::Login{"Receiver", "pass"});
     chatter.handle(Chatter::Msg::OnLine{sender.cookie, "127.0.0.1", "50000"});
     chatter.handle(Chatter::Msg::OnLine{receiver.cookie, "127.0.0.1", "50001"});
     chatter.handle(Chatter::Msg::OffLine{receiver.cookie});
@@ -176,10 +257,12 @@ TEST(sendMessage)
 {
     ExchangeData data;
     Chatter::Server chatter(StubConnectionFactory{data});
-    auto sender = chatter.handle(Chatter::Msg::Register{"Sender"});
-    auto receiver = chatter.handle(Chatter::Msg::Register{"Receiver"});
-    chatter.handle(Chatter::Msg::OnLine{sender.cookie, "127.0.0.1", "50000"});
-    chatter.handle(Chatter::Msg::OnLine{receiver.cookie, "127.0.0.1", "50001"});
+    chatter.handle(Chatter::Msg::Register{"Sender"});
+    chatter.handle(Chatter::Msg::Register{"Receiver"});
+    auto receiver = chatter.handle(Chatter::Msg::Login{"Receiver", "pass"});
+    auto sender = chatter.handle(Chatter::Msg::Login{"Sender", "pass"});
+    IS_TRUE(chatter.handle(Chatter::Msg::OnLine{sender.cookie, "127.0.0.1", "50000"}).success);
+    IS_TRUE(chatter.handle(Chatter::Msg::OnLine{receiver.cookie, "127.0.0.1", "50001"}).success);
 
     IS_EQ(Chatter::Msg::MessageAck::Status::Sent, chatter.handle(Chatter::Msg::Message{sender.cookie, "Receiver", "Hello"}).status);
     IS_EQ("127.0.0.1", data.connectedToHost());
@@ -194,8 +277,10 @@ TEST(sendMessageToNewAddr)
 {
     ExchangeData data;
     Chatter::Server chatter(StubConnectionFactory{data});
-    auto sender = chatter.handle(Chatter::Msg::Register{"Sender"});
-    auto receiver = chatter.handle(Chatter::Msg::Register{"Receiver"});
+    chatter.handle(Chatter::Msg::Register{"Sender"});
+    chatter.handle(Chatter::Msg::Register{"Receiver"});
+    auto sender = chatter.handle(Chatter::Msg::Login{"Sender", "pass"});
+    auto receiver = chatter.handle(Chatter::Msg::Login{"Receiver", "pass"});
     chatter.handle(Chatter::Msg::OnLine{sender.cookie, "127.0.0.1", "50000"});
     chatter.handle(Chatter::Msg::OnLine{receiver.cookie, "127.0.0.1", "50001"});
     chatter.handle(Chatter::Msg::OffLine{receiver.cookie});
@@ -209,8 +294,10 @@ TEST(sendBufferedMessages)
 {
     ExchangeData data;
     Chatter::Server chatter(StubConnectionFactory{data});
-    auto sender = chatter.handle(Chatter::Msg::Register{"Sender"});
-    auto receiver = chatter.handle(Chatter::Msg::Register{"Receiver"});
+    chatter.handle(Chatter::Msg::Register{"Sender"});
+    chatter.handle(Chatter::Msg::Register{"Receiver"});
+    auto sender = chatter.handle(Chatter::Msg::Login{"Sender", "pass"});
+    auto receiver = chatter.handle(Chatter::Msg::Login{"Receiver", "pass"});
     chatter.handle(Chatter::Msg::OnLine{sender.cookie, "127.0.0.1", "50000"});
     
     IS_EQ(Chatter::Msg::MessageAck::Status::Buffered, chatter.handle(Chatter::Msg::Message{sender.cookie, "Receiver", "Message 1"}).status);
@@ -231,8 +318,10 @@ TEST(sendMessageWithSpecialChars)
 {
     ExchangeData data;
     Chatter::Server chatter(StubConnectionFactory{data});
-    auto sender = chatter.handle(Chatter::Msg::Register{"Sender"});
-    auto receiver = chatter.handle(Chatter::Msg::Register{"Receiver"});
+    chatter.handle(Chatter::Msg::Register{"Sender"});
+    chatter.handle(Chatter::Msg::Register{"Receiver"});
+    auto sender = chatter.handle(Chatter::Msg::Login{"Sender", "pass"});
+    auto receiver = chatter.handle(Chatter::Msg::Login{"Receiver", "pass"});
     chatter.handle(Chatter::Msg::OnLine{sender.cookie, "127.0.0.1", "50000"});
     chatter.handle(Chatter::Msg::OnLine{receiver.cookie, "127.0.0.1", "50001"});
 
@@ -246,13 +335,21 @@ int main()
     
     RUN_TEST(cookieHas16AlfanumerifChars);
     RUN_TEST(genearesDifferentCookies);
-    RUN_TEST(registerUserSecondTimeWillReturnEmptyCookie);
+    RUN_TEST(registerUserSecondTimeWillFail);
+    RUN_TEST(loginUnregisteredUserWillFail);
+    RUN_TEST(loginRegisteredUserWillReturnCookie);
+    RUN_TEST(loginSecondTimeWillFail);
+    RUN_TEST(loginAfyerLogoutWillReturnCookie);
     RUN_TEST(registerUnregisteredUser);
     RUN_TEST(onlineWillReturnTrue);
     RUN_TEST(onlineUnregisteredUserWillReturnFalse);
+    RUN_TEST(onlineUnloggedUserWillReturnFalse);
     RUN_TEST(sendMessageFromUnknownUserWillFail);
+    RUN_TEST(sendMessageFromUnloggedUserWillFail);
     RUN_TEST(sendMessageToUnknownUserWillFail);
+    RUN_TEST(sendMessageToNotLoggedUserWillReturnBufferdStatus);
     RUN_TEST(sendMessageToOfflineUserWillReturnBufferdStatus);
+    RUN_TEST(sendMessageToLoggedoutUserWillReturnBufferdStatus);
     RUN_TEST(sendMessageToUserSwitchedToOfflineWillReturnBufferdStatus);
     RUN_TEST(sendMessage);
     RUN_TEST(sendMessageToNewAddr);

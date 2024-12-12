@@ -19,6 +19,8 @@ enum class ID
     Message,
     MessageAck,
     Stop,
+    Login,
+    Logout,
     Dummy
 };
 std::string toString(ID p_id);
@@ -42,6 +44,17 @@ struct Result
 struct UnRegister
 {
     static const ID id = ID::UnRegister;
+    std::string cookie;
+};
+struct Login
+{
+    static const ID id = ID::Login;
+    std::string userName;
+    std::string password;
+};
+struct Logout
+{
+    static const ID id = ID::Logout;
     std::string cookie;
 };
 struct OnLine
