@@ -30,6 +30,7 @@ struct Register
 {
     static const ID id = ID::Register;
     std::string userName;
+    std::string password;
 };
 struct Cookie
 {

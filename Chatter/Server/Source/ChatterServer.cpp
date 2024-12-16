@@ -59,11 +59,11 @@ catch(std::exception&)
 
 Msg::MessageAck::Status Server::User::bufferMsg(const Msg::Message& p_message)
 {
+    bufferedMessages.push(p_message);
     if(bufferedMessages.size() >= bufferCapacity)
     {
-        return Msg::MessageAck::Status::Failed;
+        bufferedMessages.pop();
     }
-    bufferedMessages.push(p_message);
     return Msg::MessageAck::Status::Buffered;
 }
 
@@ -72,8 +72,8 @@ Msg::MessageAck::Status Server::User::message(const Msg::Message& p_message)
     return (this->*sendAction)(p_message);
 }
 
-Server::Server(ConnectionFactory p_factory)
-    : connections(p_factory)
+Server::Server(ConnectionFactory p_factory, std::unique_ptr<IAuthenticator> p_authenticator)
+    : connections(p_factory), authenticator(std::move(p_authenticator))
 {
 }
 

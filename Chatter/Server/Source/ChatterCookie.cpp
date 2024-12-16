@@ -52,7 +52,7 @@ Cookie CookieStore::generateCookie() const
 
 bool CookieStore::exists(const Cookie& p_cookie) const
 {
-    return std::find(cookies.begin(), cookies.end(), p_cookie) != cookies.end();
+    return cookies.count(p_cookie) == 1;
 }
 
 Cookie CookieStore::allocateCookie()
@@ -66,17 +66,13 @@ Cookie CookieStore::allocateCookie()
     {
         throw std::runtime_error("Failed to generate unique cookie");
     }
-    cookies.push_back(cookie);
+    cookies.insert(cookie);
     return cookie;
 }
 
 void CookieStore::releaseCookie(const Cookie& p_cookie)
 {
-    auto it = std::find(cookies.begin(), cookies.end(), p_cookie);
-    if(it != cookies.end())
-    {
-        cookies.erase(it);
-    }
+    cookies.erase(p_cookie);
 }
 
 }

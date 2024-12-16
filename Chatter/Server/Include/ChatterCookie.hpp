@@ -1,7 +1,7 @@
 #pragma once
 
 #include <string>
-#include <vector>
+#include <set>
 
 namespace Chatter
 {
@@ -35,7 +35,7 @@ private:
     Cookie generateCookie() const;
     bool exists(const Cookie& p_cookie) const;
 
-    std::vector<Cookie> cookies;
+    std::set<Cookie> cookies;
 };
 
 }

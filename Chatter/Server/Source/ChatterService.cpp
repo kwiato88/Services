@@ -7,9 +7,27 @@
 namespace Chatter
 {
 
+class AllowAll : public IAuthenticator
+{
+public:
+    bool addUser(const std::string&, const std::string&) override
+    {
+        return true;
+    }
+    void removeUser(const std::string&) override
+    {
+    }
+    bool authenticate(const std::string&, const std::string&) override
+    {
+        return true;
+    }
+};
+
 Service::Service()
     : BaseService(std::bind(&Service::createServer, this)),
-      chatter(std::make_shared<Server>([](const auto& p_host, const auto& p_port) { return std::make_unique<msg::TcpIpConnection>(p_host, p_port); }))
+      chatter(std::make_shared<Server>(
+        [](const auto& p_host, const auto& p_port) { return std::make_unique<msg::TcpIpConnection>(p_host, p_port); },
+        std::make_unique<AllowAll>()))
 {
     setup();
     add<Msg::Register, Msg::Result>();

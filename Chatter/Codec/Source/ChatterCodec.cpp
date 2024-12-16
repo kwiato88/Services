@@ -22,6 +22,7 @@ boost::property_tree::ptree Serialization::toPtree<Register>(const Register& p_m
 {
     boost::property_tree::ptree msg;
     msg.put("userName", p_msg.userName);
+    msg.put("password", p_msg.password);
     return msg;
 }
 template<>
@@ -29,6 +30,7 @@ Register Serialization::fromPtree<Register>(const boost::property_tree::ptree& p
 {
     Register msg = {};
     msg.userName = p_data.get<std::string>("userName", "");
+    msg.password = p_data.get<std::string>("password", "");
     return msg;
 }
 template<>

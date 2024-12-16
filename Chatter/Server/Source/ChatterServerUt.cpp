@@ -79,6 +79,22 @@ struct StubConnectionFactory
     ExchangeData& data;
 };
 
+class StubAuthenticator : public Chatter::IAuthenticator
+{
+public:
+    bool addUser(const std::string& , const std::string& ) override
+    {
+        return true;
+    }
+    void removeUser(const std::string& ) override
+    {
+    }
+    bool authenticate(const std::string& , const std::string& ) override
+    {
+        return true;
+    }
+};
+
 TEST(cookieHas16AlfanumerifChars)
 {
     Chatter::CookieStore cookies;
@@ -104,7 +120,7 @@ TEST(genearesDifferentCookies)
 TEST(registerUserSecondTimeWillFail)
 {
     ExchangeData data;
-    Chatter::Server chatter(StubConnectionFactory{data});
+    Chatter::Server chatter(StubConnectionFactory{data}, std::make_unique<StubAuthenticator>());
     IS_TRUE(chatter.handle(Chatter::Msg::Register{"MyUser"}).success);
     IS_FALSE(chatter.handle(Chatter::Msg::Register{"MyUser"}).success);
 }
@@ -112,14 +128,14 @@ TEST(registerUserSecondTimeWillFail)
 TEST(loginUnregisteredUserWillFail)
 {
     ExchangeData data;
-    Chatter::Server chatter(StubConnectionFactory{data});
+    Chatter::Server chatter(StubConnectionFactory{data}, std::make_unique<StubAuthenticator>());
     IS_TRUE(chatter.handle(Chatter::Msg::Login{"MyUser", "pass"}).cookie.empty());
 }
 
 TEST(loginRegisteredUserWillReturnCookie)
 {
     ExchangeData data;
-    Chatter::Server chatter(StubConnectionFactory{data});
+    Chatter::Server chatter(StubConnectionFactory{data}, std::make_unique<StubAuthenticator>());
     chatter.handle(Chatter::Msg::Register{"MyUser"});
     IS_FALSE(chatter.handle(Chatter::Msg::Login{"MyUser", "pass"}).cookie.empty());
 }
@@ -127,7 +143,7 @@ TEST(loginRegisteredUserWillReturnCookie)
 TEST(loginSecondTimeWillFail)
 {
     ExchangeData data;
-    Chatter::Server chatter(StubConnectionFactory{data});
+    Chatter::Server chatter(StubConnectionFactory{data}, std::make_unique<StubAuthenticator>());
     chatter.handle(Chatter::Msg::Register{"MyUser"});
     chatter.handle(Chatter::Msg::Login{"MyUser", "pass"});
     IS_EQ("0", chatter.handle(Chatter::Msg::Login{"MyUser", "pass"}).cookie);
@@ -136,7 +152,7 @@ TEST(loginSecondTimeWillFail)
 TEST(loginAfyerLogoutWillReturnCookie)
 {
     ExchangeData data;
-    Chatter::Server chatter(StubConnectionFactory{data});
+    Chatter::Server chatter(StubConnectionFactory{data}, std::make_unique<StubAuthenticator>());
     chatter.handle(Chatter::Msg::Register{"MyUser"});
     chatter.handle(Chatter::Msg::Login{"MyUser", "pass"});
     chatter.handle(Chatter::Msg::Logout{"MyUser"});
@@ -146,7 +162,7 @@ TEST(loginAfyerLogoutWillReturnCookie)
 TEST(registerUnregisteredUser)
 {
     ExchangeData data;
-    Chatter::Server chatter(StubConnectionFactory{data});
+    Chatter::Server chatter(StubConnectionFactory{data}, std::make_unique<StubAuthenticator>());
     chatter.handle(Chatter::Msg::Register{"MyUser"});
     auto cookie = chatter.handle(Chatter::Msg::Login{"MyUser", "pass"});
     chatter.handle(Chatter::Msg::UnRegister{cookie.cookie});
@@ -156,7 +172,7 @@ TEST(registerUnregisteredUser)
 TEST(onlineWillReturnTrue)
 {
     ExchangeData data;
-    Chatter::Server chatter(StubConnectionFactory{data});
+    Chatter::Server chatter(StubConnectionFactory{data}, std::make_unique<StubAuthenticator>());
     chatter.handle(Chatter::Msg::Register{"MyUser"});
     auto cookie = chatter.handle(Chatter::Msg::Login{"MyUser", "pass"});
     IS_TRUE(chatter.handle(Chatter::Msg::OnLine{cookie.cookie, "127.0.0.1", "50000"}).success);
@@ -165,14 +181,14 @@ TEST(onlineWillReturnTrue)
 TEST(onlineUnregisteredUserWillReturnFalse)
 {
     ExchangeData data;
-    Chatter::Server chatter(StubConnectionFactory{data});
+    Chatter::Server chatter(StubConnectionFactory{data}, std::make_unique<StubAuthenticator>());
     IS_FALSE(chatter.handle(Chatter::Msg::OnLine{"MyUser", "127.0.0.1", "50000"}).success);
 }
 
 TEST(onlineUnloggedUserWillReturnFalse)
 {
     ExchangeData data;
-    Chatter::Server chatter(StubConnectionFactory{data});
+    Chatter::Server chatter(StubConnectionFactory{data}, std::make_unique<StubAuthenticator>());
     chatter.handle(Chatter::Msg::Register{"MyUser"});
     IS_FALSE(chatter.handle(Chatter::Msg::OnLine{"MyUser", "127.0.0.1", "50000"}).success);
 }
@@ -180,14 +196,14 @@ TEST(onlineUnloggedUserWillReturnFalse)
 TEST(sendMessageFromUnknownUserWillFail)
 {
     ExchangeData data;
-    Chatter::Server chatter(StubConnectionFactory{data});
+    Chatter::Server chatter(StubConnectionFactory{data}, std::make_unique<StubAuthenticator>());
     IS_EQ(Chatter::Msg::MessageAck::Status::UnknownUser, chatter.handle(Chatter::Msg::Message{"Sender", "Receiver", "Hello"}).status);
 }
 
 TEST(sendMessageFromUnloggedUserWillFail)
 {
     ExchangeData data;
-    Chatter::Server chatter(StubConnectionFactory{data});
+    Chatter::Server chatter(StubConnectionFactory{data}, std::make_unique<StubAuthenticator>());
     chatter.handle(Chatter::Msg::Register{"Sender"});
     IS_EQ(Chatter::Msg::MessageAck::Status::UnknownUser, chatter.handle(Chatter::Msg::Message{"Sender", "Receiver", "Hello"}).status);
 }
@@ -195,7 +211,7 @@ TEST(sendMessageFromUnloggedUserWillFail)
 TEST(sendMessageToUnknownUserWillFail)
 {
     ExchangeData data;
-    Chatter::Server chatter(StubConnectionFactory{data});
+    Chatter::Server chatter(StubConnectionFactory{data}, std::make_unique<StubAuthenticator>());
     chatter.handle(Chatter::Msg::Register{"Sender"});
     auto sender = chatter.handle(Chatter::Msg::Login{"Sender", "pass"});
     chatter.handle(Chatter::Msg::OnLine{sender.cookie, "127.0.0.1", "50000"});
@@ -205,7 +221,7 @@ TEST(sendMessageToUnknownUserWillFail)
 TEST(sendMessageToNotLoggedUserWillReturnBufferdStatus)
 {
     ExchangeData data;
-    Chatter::Server chatter(StubConnectionFactory{data});
+    Chatter::Server chatter(StubConnectionFactory{data}, std::make_unique<StubAuthenticator>());
     chatter.handle(Chatter::Msg::Register{"Sender"});
     chatter.handle(Chatter::Msg::Register{"Receiver"});
     auto sender = chatter.handle(Chatter::Msg::Login{"Sender", "pass"});
@@ -216,7 +232,7 @@ TEST(sendMessageToNotLoggedUserWillReturnBufferdStatus)
 TEST(sendMessageToOfflineUserWillReturnBufferdStatus)
 {
     ExchangeData data;
-    Chatter::Server chatter(StubConnectionFactory{data});
+    Chatter::Server chatter(StubConnectionFactory{data}, std::make_unique<StubAuthenticator>());
     chatter.handle(Chatter::Msg::Register{"Sender"});
     chatter.handle(Chatter::Msg::Register{"Receiver"});
     auto sender = chatter.handle(Chatter::Msg::Login{"Sender", "pass"});
@@ -228,7 +244,7 @@ TEST(sendMessageToOfflineUserWillReturnBufferdStatus)
 TEST(sendMessageToLoggedoutUserWillReturnBufferdStatus)
 {
     ExchangeData data;
-    Chatter::Server chatter(StubConnectionFactory{data});
+    Chatter::Server chatter(StubConnectionFactory{data}, std::make_unique<StubAuthenticator>());
     chatter.handle(Chatter::Msg::Register{"Sender"});
     chatter.handle(Chatter::Msg::Register{"Receiver"});
     auto sender = chatter.handle(Chatter::Msg::Login{"Sender", "pass"});
@@ -242,7 +258,7 @@ TEST(sendMessageToLoggedoutUserWillReturnBufferdStatus)
 TEST(sendMessageToUserSwitchedToOfflineWillReturnBufferdStatus)
 {
     ExchangeData data;
-    Chatter::Server chatter(StubConnectionFactory{data});
+    Chatter::Server chatter(StubConnectionFactory{data}, std::make_unique<StubAuthenticator>());
     chatter.handle(Chatter::Msg::Register{"Sender"});
     chatter.handle(Chatter::Msg::Register{"Receiver"});
     auto sender = chatter.handle(Chatter::Msg::Login{"Sender", "pass"});
@@ -256,7 +272,7 @@ TEST(sendMessageToUserSwitchedToOfflineWillReturnBufferdStatus)
 TEST(sendMessage)
 {
     ExchangeData data;
-    Chatter::Server chatter(StubConnectionFactory{data});
+    Chatter::Server chatter(StubConnectionFactory{data}, std::make_unique<StubAuthenticator>());
     chatter.handle(Chatter::Msg::Register{"Sender"});
     chatter.handle(Chatter::Msg::Register{"Receiver"});
     auto receiver = chatter.handle(Chatter::Msg::Login{"Receiver", "pass"});
@@ -276,7 +292,7 @@ TEST(sendMessage)
 TEST(sendMessageToNewAddr)
 {
     ExchangeData data;
-    Chatter::Server chatter(StubConnectionFactory{data});
+    Chatter::Server chatter(StubConnectionFactory{data}, std::make_unique<StubAuthenticator>());
     chatter.handle(Chatter::Msg::Register{"Sender"});
     chatter.handle(Chatter::Msg::Register{"Receiver"});
     auto sender = chatter.handle(Chatter::Msg::Login{"Sender", "pass"});
@@ -293,7 +309,7 @@ TEST(sendMessageToNewAddr)
 TEST(sendBufferedMessages)
 {
     ExchangeData data;
-    Chatter::Server chatter(StubConnectionFactory{data});
+    Chatter::Server chatter(StubConnectionFactory{data}, std::make_unique<StubAuthenticator>());
     chatter.handle(Chatter::Msg::Register{"Sender"});
     chatter.handle(Chatter::Msg::Register{"Receiver"});
     auto sender = chatter.handle(Chatter::Msg::Login{"Sender", "pass"});
@@ -317,7 +333,7 @@ TEST(sendBufferedMessages)
 TEST(sendMessageWithSpecialChars)
 {
     ExchangeData data;
-    Chatter::Server chatter(StubConnectionFactory{data});
+    Chatter::Server chatter(StubConnectionFactory{data}, std::make_unique<StubAuthenticator>());
     chatter.handle(Chatter::Msg::Register{"Sender"});
     chatter.handle(Chatter::Msg::Register{"Receiver"});
     auto sender = chatter.handle(Chatter::Msg::Login{"Sender", "pass"});

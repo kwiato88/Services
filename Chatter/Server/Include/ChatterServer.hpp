@@ -7,6 +7,7 @@
 #include <functional>
 #include "ChatterMsg.hpp"
 #include "ChatterCookie.hpp"
+#include "ChatterIAuthenticator.hpp"
 #include "MsgReqHandler.hpp"
 #include "MsgConnection.hpp"
 
@@ -25,7 +26,7 @@ class Server
    public msg::ReqHandler<Msg::Message, Msg::MessageAck>
 {
 public:
-    Server(ConnectionFactory p_factory);
+    Server(ConnectionFactory p_factory, std::unique_ptr<IAuthenticator> p_authenticator);
     Msg::Result handle(const Msg::Register& p_msg);
     void handle(const Msg::UnRegister& p_msg);
     Msg::Cookie handle(const Msg::Login& p_msg);
@@ -72,6 +73,7 @@ private:
 
     ConnectionFactory connections;
     CookieStore cookies;
+    std::unique_ptr<IAuthenticator> authenticator;
     std::map<std::string, User> notLoggedUsers; //TODO: consoder storing all users
     std::map<Cookie, User> loggedUsers;
 };
