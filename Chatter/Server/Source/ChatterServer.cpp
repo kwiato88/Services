@@ -95,7 +95,7 @@ bool Server::isRegisteredNotLogged(const std::string& p_userName) const
 
 Msg::Result Server::handle(const Msg::Register& p_msg)
 {
-    if(isRegisteredNotLogged(p_msg.userName) || isLogged(p_msg.userName))
+    if(isRegisteredNotLogged(p_msg.userName) || isLogged(p_msg.userName) || !authenticator->addUser(p_msg.userName, p_msg.password))
     {
         return Msg::Result{false};
     }
@@ -109,6 +109,7 @@ void Server::handle(const Msg::UnRegister& p_msg)
     if(it != loggedUsers.end())
     {
         it->second.offline();
+        authenticator->removeUser(it->second.getName());
         loggedUsers.erase(it);
         cookies.releaseCookie(Cookie{p_msg.cookie});
     }
@@ -117,6 +118,10 @@ void Server::handle(const Msg::UnRegister& p_msg)
 Msg::Cookie Server::handle(const Msg::Login& p_msg)
 try
 {
+    if(!authenticator->authenticate(p_msg.userName, p_msg.password))
+    {
+        return Msg::Cookie{""};
+    }
     if(isLogged(p_msg.userName))
     {
         return Msg::Cookie{"0"};

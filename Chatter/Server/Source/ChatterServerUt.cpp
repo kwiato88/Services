@@ -1,5 +1,6 @@
 #include <cctype>
 #include <vector>
+#include <algorithm>
 #include "ChatterCookie.hpp"
 #include "ChatterServer.hpp"
 #include "ChatterCodec.hpp"
@@ -79,20 +80,80 @@ struct StubConnectionFactory
     ExchangeData& data;
 };
 
+struct Users
+{
+    struct User
+    {
+        bool operator==(const User& p_other) { return name == p_other.name && password == p_other.password; }
+        std::string name;
+        std::string password;
+    };
+    bool onAdd(const std::string& p_user, const std::string& p_password)
+    {
+        addedUsers.push_back(User{p_user, p_password});
+        auto it = std::find(toBeAdded.begin(), toBeAdded.end(), User{p_user, p_password});
+        return it != toBeAdded.end();
+    }
+    void onRemove(const std::string& p_user)
+    {
+        removedUsers.push_back(p_user);
+    }
+    bool onAuthenticate(const std::string& p_user, const std::string& p_password)
+    {
+        authenticateAttempts.push_back(User{p_user, p_password});
+        auto it = std::find(toBeAllowedUsers.begin(), toBeAllowedUsers.end(), User{p_user, p_password});
+        return it != toBeAllowedUsers.end();
+    }
+
+    void willBeRegistered(const std::string& p_user, const std::string& p_pass)
+    {
+        toBeAdded.push_back(User{p_user, p_pass});
+    }
+    void willBeAllowed(const std::string& p_user, const std::string& p_pass)
+    {
+        toBeAllowedUsers.push_back(User{p_user, p_pass});
+    }
+    bool wasAdded(const std::string& p_user, const std::string& p_pass)
+    {
+        return std::find(addedUsers.begin(), addedUsers.end(), User{p_user, p_pass}) != addedUsers.end();
+    }
+    bool wasRemoved(const std::string& p_user)
+    {
+        return std::find(removedUsers.begin(), removedUsers.end(), p_user) != removedUsers.end();
+    }
+    bool wasAuthenticated(const std::string& p_user, const std::string& p_pass)
+    {
+        return std::find(authenticateAttempts.begin(), authenticateAttempts.end(), User{p_user, p_pass}) != authenticateAttempts.end();
+    }
+
+    std::vector<User> addedUsers;
+    std::vector<std::string> removedUsers;
+    std::vector<User> authenticateAttempts;
+    std::vector<User> toBeAllowedUsers;
+    std::vector<User> toBeAdded;
+
+};
+
 class StubAuthenticator : public Chatter::IAuthenticator
 {
 public:
-    bool addUser(const std::string& , const std::string& ) override
-    {
-        return true;
-    }
-    void removeUser(const std::string& ) override
+    StubAuthenticator(Users& p_users)
+        : users(p_users)
     {
     }
-    bool authenticate(const std::string& , const std::string& ) override
+    bool addUser(const std::string& p_user, const std::string& p_password) override
     {
-        return true;
+        return users.onAdd(p_user, p_password);
     }
+    void removeUser(const std::string& p_user) override
+    {
+        users.onRemove(p_user);
+    }
+    bool authenticate(const std::string& p_usser, const std::string& p_password) override
+    {
+        return users.onAuthenticate(p_usser, p_password);
+    }
+    Users& users;
 };
 
 TEST(cookieHas16AlfanumerifChars)
@@ -120,60 +181,101 @@ TEST(genearesDifferentCookies)
 TEST(registerUserSecondTimeWillFail)
 {
     ExchangeData data;
-    Chatter::Server chatter(StubConnectionFactory{data}, std::make_unique<StubAuthenticator>());
-    IS_TRUE(chatter.handle(Chatter::Msg::Register{"MyUser"}).success);
-    IS_FALSE(chatter.handle(Chatter::Msg::Register{"MyUser"}).success);
+    Users users;
+    Chatter::Server chatter(StubConnectionFactory{data}, std::make_unique<StubAuthenticator>(users));
+
+    users.willBeRegistered("MyUser", "Pass");
+    IS_TRUE(chatter.handle(Chatter::Msg::Register{"MyUser", "Pass"}).success);
+    IS_TRUE(users.wasAdded("MyUser", "Pass"));
+
+    users.addedUsers.clear();
+    IS_FALSE(chatter.handle(Chatter::Msg::Register{"MyUser", "Pass"}).success);
 }
 
 TEST(loginUnregisteredUserWillFail)
 {
     ExchangeData data;
-    Chatter::Server chatter(StubConnectionFactory{data}, std::make_unique<StubAuthenticator>());
+    Users users;
+    Chatter::Server chatter(StubConnectionFactory{data}, std::make_unique<StubAuthenticator>(users));
     IS_TRUE(chatter.handle(Chatter::Msg::Login{"MyUser", "pass"}).cookie.empty());
+}
+
+TEST(logInWillFailWhenUserIsNotAuthenticated)
+{
+    ExchangeData data;
+    Users users;
+    Chatter::Server chatter(StubConnectionFactory{data}, std::make_unique<StubAuthenticator>(users));
+
+    users.willBeRegistered("MyUser", "Pass");
+    chatter.handle(Chatter::Msg::Register{"MyUser", "Pass"});
+
+    IS_TRUE(chatter.handle(Chatter::Msg::Login{"MyUser", "pass"}).cookie.empty());
+    users.wasAuthenticated("MyUser", "pass"); 
 }
 
 TEST(loginRegisteredUserWillReturnCookie)
 {
     ExchangeData data;
-    Chatter::Server chatter(StubConnectionFactory{data}, std::make_unique<StubAuthenticator>());
-    chatter.handle(Chatter::Msg::Register{"MyUser"});
-    IS_FALSE(chatter.handle(Chatter::Msg::Login{"MyUser", "pass"}).cookie.empty());
+    Users users;
+    Chatter::Server chatter(StubConnectionFactory{data}, std::make_unique<StubAuthenticator>(users));
+
+    users.willBeRegistered("MyUser", "Pass");
+    chatter.handle(Chatter::Msg::Register{"MyUser", "Pass"});
+    users.willBeAllowed("MyUser", "Pass");
+    IS_FALSE(chatter.handle(Chatter::Msg::Login{"MyUser", "Pass"}).cookie.empty());
+    users.wasAuthenticated("MyUser", "Pass");
 }
 
 TEST(loginSecondTimeWillFail)
 {
     ExchangeData data;
-    Chatter::Server chatter(StubConnectionFactory{data}, std::make_unique<StubAuthenticator>());
-    chatter.handle(Chatter::Msg::Register{"MyUser"});
-    chatter.handle(Chatter::Msg::Login{"MyUser", "pass"});
-    IS_EQ("0", chatter.handle(Chatter::Msg::Login{"MyUser", "pass"}).cookie);
+    Users users;
+    Chatter::Server chatter(StubConnectionFactory{data}, std::make_unique<StubAuthenticator>(users));
+
+    users.willBeRegistered("MyUser", "Pass");
+    chatter.handle(Chatter::Msg::Register{"MyUser", "Pass"});
+    users.willBeAllowed("MyUser", "Pass");
+    chatter.handle(Chatter::Msg::Login{"MyUser", "Pass"});
+    IS_EQ("0", chatter.handle(Chatter::Msg::Login{"MyUser", "Pass"}).cookie);
 }
 
 TEST(loginAfyerLogoutWillReturnCookie)
 {
     ExchangeData data;
-    Chatter::Server chatter(StubConnectionFactory{data}, std::make_unique<StubAuthenticator>());
-    chatter.handle(Chatter::Msg::Register{"MyUser"});
-    chatter.handle(Chatter::Msg::Login{"MyUser", "pass"});
-    chatter.handle(Chatter::Msg::Logout{"MyUser"});
-    IS_FALSE(chatter.handle(Chatter::Msg::Login{"MyUser", "pass"}).cookie.empty());
+    Users users;
+    Chatter::Server chatter(StubConnectionFactory{data}, std::make_unique<StubAuthenticator>(users));
+
+    users.willBeRegistered("MyUser", "Pass");
+    chatter.handle(Chatter::Msg::Register{"MyUser", "Pass"});
+    users.willBeAllowed("MyUser", "Pass");
+    auto cookie = chatter.handle(Chatter::Msg::Login{"MyUser", "Pass"}).cookie;
+    chatter.handle(Chatter::Msg::Logout{cookie});
+    IS_FALSE(chatter.handle(Chatter::Msg::Login{"MyUser", "Pass"}).cookie.empty());
 }
 
 TEST(registerUnregisteredUser)
 {
     ExchangeData data;
-    Chatter::Server chatter(StubConnectionFactory{data}, std::make_unique<StubAuthenticator>());
-    chatter.handle(Chatter::Msg::Register{"MyUser"});
-    auto cookie = chatter.handle(Chatter::Msg::Login{"MyUser", "pass"});
+    Users users;
+    Chatter::Server chatter(StubConnectionFactory{data}, std::make_unique<StubAuthenticator>(users));
+
+    users.willBeRegistered("MyUser", "Pass");
+    chatter.handle(Chatter::Msg::Register{"MyUser", "Pass"});
+    users.willBeAllowed("MyUser", "Pass");
+    auto cookie = chatter.handle(Chatter::Msg::Login{"MyUser", "Pass"});
     chatter.handle(Chatter::Msg::UnRegister{cookie.cookie});
-    IS_TRUE(chatter.handle(Chatter::Msg::Register{"MyUser"}).success);
+    IS_TRUE(chatter.handle(Chatter::Msg::Register{"MyUser", "Pass"}).success);
 }
 
 TEST(onlineWillReturnTrue)
 {
     ExchangeData data;
-    Chatter::Server chatter(StubConnectionFactory{data}, std::make_unique<StubAuthenticator>());
-    chatter.handle(Chatter::Msg::Register{"MyUser"});
+    Users users;
+    Chatter::Server chatter(StubConnectionFactory{data}, std::make_unique<StubAuthenticator>(users));
+
+    users.willBeRegistered("MyUser", "pass");
+    chatter.handle(Chatter::Msg::Register{"MyUser", "pass"});
+    users.willBeAllowed("MyUser", "pass");
     auto cookie = chatter.handle(Chatter::Msg::Login{"MyUser", "pass"});
     IS_TRUE(chatter.handle(Chatter::Msg::OnLine{cookie.cookie, "127.0.0.1", "50000"}).success);
 }
@@ -181,38 +283,47 @@ TEST(onlineWillReturnTrue)
 TEST(onlineUnregisteredUserWillReturnFalse)
 {
     ExchangeData data;
-    Chatter::Server chatter(StubConnectionFactory{data}, std::make_unique<StubAuthenticator>());
+    Users users;
+    Chatter::Server chatter(StubConnectionFactory{data}, std::make_unique<StubAuthenticator>(users));
     IS_FALSE(chatter.handle(Chatter::Msg::OnLine{"MyUser", "127.0.0.1", "50000"}).success);
 }
 
 TEST(onlineUnloggedUserWillReturnFalse)
 {
     ExchangeData data;
-    Chatter::Server chatter(StubConnectionFactory{data}, std::make_unique<StubAuthenticator>());
-    chatter.handle(Chatter::Msg::Register{"MyUser"});
+    Users users;
+    Chatter::Server chatter(StubConnectionFactory{data}, std::make_unique<StubAuthenticator>(users));
+    users.willBeRegistered("MyUser", "pass");
+    chatter.handle(Chatter::Msg::Register{"MyUser", "pass"});
     IS_FALSE(chatter.handle(Chatter::Msg::OnLine{"MyUser", "127.0.0.1", "50000"}).success);
 }
 
 TEST(sendMessageFromUnknownUserWillFail)
 {
     ExchangeData data;
-    Chatter::Server chatter(StubConnectionFactory{data}, std::make_unique<StubAuthenticator>());
+    Users users;
+    Chatter::Server chatter(StubConnectionFactory{data}, std::make_unique<StubAuthenticator>(users));
     IS_EQ(Chatter::Msg::MessageAck::Status::UnknownUser, chatter.handle(Chatter::Msg::Message{"Sender", "Receiver", "Hello"}).status);
 }
 
 TEST(sendMessageFromUnloggedUserWillFail)
 {
     ExchangeData data;
-    Chatter::Server chatter(StubConnectionFactory{data}, std::make_unique<StubAuthenticator>());
-    chatter.handle(Chatter::Msg::Register{"Sender"});
+    Users users;
+    Chatter::Server chatter(StubConnectionFactory{data}, std::make_unique<StubAuthenticator>(users));
+    users.willBeRegistered("Sender", "pass");
+    chatter.handle(Chatter::Msg::Register{"Sender", "pass"});
     IS_EQ(Chatter::Msg::MessageAck::Status::UnknownUser, chatter.handle(Chatter::Msg::Message{"Sender", "Receiver", "Hello"}).status);
 }
 
 TEST(sendMessageToUnknownUserWillFail)
 {
     ExchangeData data;
-    Chatter::Server chatter(StubConnectionFactory{data}, std::make_unique<StubAuthenticator>());
-    chatter.handle(Chatter::Msg::Register{"Sender"});
+    Users users;
+    Chatter::Server chatter(StubConnectionFactory{data}, std::make_unique<StubAuthenticator>(users));
+    users.willBeRegistered("Sender", "pass");
+    chatter.handle(Chatter::Msg::Register{"Sender", "pass"});
+    users.willBeAllowed("Sender", "pass");
     auto sender = chatter.handle(Chatter::Msg::Login{"Sender", "pass"});
     chatter.handle(Chatter::Msg::OnLine{sender.cookie, "127.0.0.1", "50000"});
     IS_EQ(Chatter::Msg::MessageAck::Status::UnknownUser, chatter.handle(Chatter::Msg::Message{sender.cookie, "Receiver", "Hello"}).status);
@@ -221,10 +332,14 @@ TEST(sendMessageToUnknownUserWillFail)
 TEST(sendMessageToNotLoggedUserWillReturnBufferdStatus)
 {
     ExchangeData data;
-    Chatter::Server chatter(StubConnectionFactory{data}, std::make_unique<StubAuthenticator>());
-    chatter.handle(Chatter::Msg::Register{"Sender"});
-    chatter.handle(Chatter::Msg::Register{"Receiver"});
-    auto sender = chatter.handle(Chatter::Msg::Login{"Sender", "pass"});
+    Users users;
+    Chatter::Server chatter(StubConnectionFactory{data}, std::make_unique<StubAuthenticator>(users));
+    users.willBeRegistered("Sender", "pass1");
+    users.willBeRegistered("Receiver", "pass2");
+    chatter.handle(Chatter::Msg::Register{"Sender", "pass1"});
+    chatter.handle(Chatter::Msg::Register{"Receiver", "pass2"});
+    users.willBeAllowed("Sender", "pass1");
+    auto sender = chatter.handle(Chatter::Msg::Login{"Sender", "pass1"});
     chatter.handle(Chatter::Msg::OnLine{sender.cookie, "127.0.0.1", "50000"});
     IS_EQ(Chatter::Msg::MessageAck::Status::Buffered, chatter.handle(Chatter::Msg::Message{sender.cookie, "Receiver", "Hello"}).status);
 }
@@ -232,11 +347,16 @@ TEST(sendMessageToNotLoggedUserWillReturnBufferdStatus)
 TEST(sendMessageToOfflineUserWillReturnBufferdStatus)
 {
     ExchangeData data;
-    Chatter::Server chatter(StubConnectionFactory{data}, std::make_unique<StubAuthenticator>());
-    chatter.handle(Chatter::Msg::Register{"Sender"});
-    chatter.handle(Chatter::Msg::Register{"Receiver"});
-    auto sender = chatter.handle(Chatter::Msg::Login{"Sender", "pass"});
-    chatter.handle(Chatter::Msg::Login{"Receiver", "pass"});
+    Users users;
+    Chatter::Server chatter(StubConnectionFactory{data}, std::make_unique<StubAuthenticator>(users));
+    users.willBeRegistered("Sender", "pass1");
+    users.willBeRegistered("Receiver", "pass2");
+    users.willBeAllowed("Sender", "pass1");
+    users.willBeAllowed("Receiver", "pass2");
+    chatter.handle(Chatter::Msg::Register{"Sender", "pass1"});
+    chatter.handle(Chatter::Msg::Register{"Receiver", "pass2"});
+    auto sender = chatter.handle(Chatter::Msg::Login{"Sender", "pass1"});
+    chatter.handle(Chatter::Msg::Login{"Receiver", "pass2"});
     chatter.handle(Chatter::Msg::OnLine{sender.cookie, "127.0.0.1", "50000"});
     IS_EQ(Chatter::Msg::MessageAck::Status::Buffered, chatter.handle(Chatter::Msg::Message{sender.cookie, "Receiver", "Hello"}).status);
 }
@@ -244,11 +364,16 @@ TEST(sendMessageToOfflineUserWillReturnBufferdStatus)
 TEST(sendMessageToLoggedoutUserWillReturnBufferdStatus)
 {
     ExchangeData data;
-    Chatter::Server chatter(StubConnectionFactory{data}, std::make_unique<StubAuthenticator>());
-    chatter.handle(Chatter::Msg::Register{"Sender"});
-    chatter.handle(Chatter::Msg::Register{"Receiver"});
-    auto sender = chatter.handle(Chatter::Msg::Login{"Sender", "pass"});
-    auto receiver = chatter.handle(Chatter::Msg::Login{"Receiver", "pass"});
+    Users users;
+    Chatter::Server chatter(StubConnectionFactory{data}, std::make_unique<StubAuthenticator>(users));
+    users.willBeRegistered("Sender", "pass1");
+    users.willBeRegistered("Receiver", "pass2");
+    users.willBeAllowed("Sender", "pass1");
+    users.willBeAllowed("Receiver", "pass2");
+    chatter.handle(Chatter::Msg::Register{"Sender", "pass1"});
+    chatter.handle(Chatter::Msg::Register{"Receiver", "pass2"});
+    auto sender = chatter.handle(Chatter::Msg::Login{"Sender", "pass1"});
+    auto receiver = chatter.handle(Chatter::Msg::Login{"Receiver", "pass2"});
     chatter.handle(Chatter::Msg::OnLine{sender.cookie, "127.0.0.1", "50000"});
     chatter.handle(Chatter::Msg::OnLine{receiver.cookie, "127.0.0.1", "50001"});
     chatter.handle(Chatter::Msg::Logout{receiver.cookie});
@@ -258,11 +383,16 @@ TEST(sendMessageToLoggedoutUserWillReturnBufferdStatus)
 TEST(sendMessageToUserSwitchedToOfflineWillReturnBufferdStatus)
 {
     ExchangeData data;
-    Chatter::Server chatter(StubConnectionFactory{data}, std::make_unique<StubAuthenticator>());
-    chatter.handle(Chatter::Msg::Register{"Sender"});
-    chatter.handle(Chatter::Msg::Register{"Receiver"});
-    auto sender = chatter.handle(Chatter::Msg::Login{"Sender", "pass"});
-    auto receiver = chatter.handle(Chatter::Msg::Login{"Receiver", "pass"});
+    Users users;
+    Chatter::Server chatter(StubConnectionFactory{data}, std::make_unique<StubAuthenticator>(users));
+    users.willBeRegistered("Sender", "pass1");
+    users.willBeRegistered("Receiver", "pass2");
+    users.willBeAllowed("Sender", "pass1");
+    users.willBeAllowed("Receiver", "pass2");
+    chatter.handle(Chatter::Msg::Register{"Sender", "pass1"});
+    chatter.handle(Chatter::Msg::Register{"Receiver", "pass2"});
+    auto sender = chatter.handle(Chatter::Msg::Login{"Sender", "pass1"});
+    auto receiver = chatter.handle(Chatter::Msg::Login{"Receiver", "pass2"});
     chatter.handle(Chatter::Msg::OnLine{sender.cookie, "127.0.0.1", "50000"});
     chatter.handle(Chatter::Msg::OnLine{receiver.cookie, "127.0.0.1", "50001"});
     chatter.handle(Chatter::Msg::OffLine{receiver.cookie});
@@ -272,11 +402,16 @@ TEST(sendMessageToUserSwitchedToOfflineWillReturnBufferdStatus)
 TEST(sendMessage)
 {
     ExchangeData data;
-    Chatter::Server chatter(StubConnectionFactory{data}, std::make_unique<StubAuthenticator>());
-    chatter.handle(Chatter::Msg::Register{"Sender"});
-    chatter.handle(Chatter::Msg::Register{"Receiver"});
-    auto receiver = chatter.handle(Chatter::Msg::Login{"Receiver", "pass"});
-    auto sender = chatter.handle(Chatter::Msg::Login{"Sender", "pass"});
+    Users users;
+    Chatter::Server chatter(StubConnectionFactory{data}, std::make_unique<StubAuthenticator>(users));
+    users.willBeRegistered("Sender", "pass1");
+    users.willBeRegistered("Receiver", "pass2");
+    users.willBeAllowed("Sender", "pass1");
+    users.willBeAllowed("Receiver", "pass2");
+    chatter.handle(Chatter::Msg::Register{"Sender", "pass1"});
+    chatter.handle(Chatter::Msg::Register{"Receiver", "pass2"});
+    auto receiver = chatter.handle(Chatter::Msg::Login{"Receiver", "pass2"});
+    auto sender = chatter.handle(Chatter::Msg::Login{"Sender", "pass1"});
     IS_TRUE(chatter.handle(Chatter::Msg::OnLine{sender.cookie, "127.0.0.1", "50000"}).success);
     IS_TRUE(chatter.handle(Chatter::Msg::OnLine{receiver.cookie, "127.0.0.1", "50001"}).success);
 
@@ -292,11 +427,16 @@ TEST(sendMessage)
 TEST(sendMessageToNewAddr)
 {
     ExchangeData data;
-    Chatter::Server chatter(StubConnectionFactory{data}, std::make_unique<StubAuthenticator>());
-    chatter.handle(Chatter::Msg::Register{"Sender"});
-    chatter.handle(Chatter::Msg::Register{"Receiver"});
-    auto sender = chatter.handle(Chatter::Msg::Login{"Sender", "pass"});
-    auto receiver = chatter.handle(Chatter::Msg::Login{"Receiver", "pass"});
+    Users users;
+    Chatter::Server chatter(StubConnectionFactory{data}, std::make_unique<StubAuthenticator>(users));
+    users.willBeRegistered("Sender", "pass1");
+    users.willBeRegistered("Receiver", "pass2");
+    users.willBeAllowed("Sender", "pass1");
+    users.willBeAllowed("Receiver", "pass2");
+    chatter.handle(Chatter::Msg::Register{"Sender", "pass1"});
+    chatter.handle(Chatter::Msg::Register{"Receiver", "pass2"});
+    auto sender = chatter.handle(Chatter::Msg::Login{"Sender", "pass1"});
+    auto receiver = chatter.handle(Chatter::Msg::Login{"Receiver", "pass2"});
     chatter.handle(Chatter::Msg::OnLine{sender.cookie, "127.0.0.1", "50000"});
     chatter.handle(Chatter::Msg::OnLine{receiver.cookie, "127.0.0.1", "50001"});
     chatter.handle(Chatter::Msg::OffLine{receiver.cookie});
@@ -309,11 +449,16 @@ TEST(sendMessageToNewAddr)
 TEST(sendBufferedMessages)
 {
     ExchangeData data;
-    Chatter::Server chatter(StubConnectionFactory{data}, std::make_unique<StubAuthenticator>());
-    chatter.handle(Chatter::Msg::Register{"Sender"});
-    chatter.handle(Chatter::Msg::Register{"Receiver"});
-    auto sender = chatter.handle(Chatter::Msg::Login{"Sender", "pass"});
-    auto receiver = chatter.handle(Chatter::Msg::Login{"Receiver", "pass"});
+    Users users;
+    Chatter::Server chatter(StubConnectionFactory{data}, std::make_unique<StubAuthenticator>(users));
+    users.willBeRegistered("Sender", "pass1");
+    users.willBeRegistered("Receiver", "pass2");
+    users.willBeAllowed("Sender", "pass1");
+    users.willBeAllowed("Receiver", "pass2");
+    chatter.handle(Chatter::Msg::Register{"Sender", "pass1"});
+    chatter.handle(Chatter::Msg::Register{"Receiver", "pass2"});
+    auto sender = chatter.handle(Chatter::Msg::Login{"Sender", "pass1"});
+    auto receiver = chatter.handle(Chatter::Msg::Login{"Receiver", "pass2"});
     chatter.handle(Chatter::Msg::OnLine{sender.cookie, "127.0.0.1", "50000"});
     
     IS_EQ(Chatter::Msg::MessageAck::Status::Buffered, chatter.handle(Chatter::Msg::Message{sender.cookie, "Receiver", "Message 1"}).status);
@@ -333,11 +478,16 @@ TEST(sendBufferedMessages)
 TEST(sendMessageWithSpecialChars)
 {
     ExchangeData data;
-    Chatter::Server chatter(StubConnectionFactory{data}, std::make_unique<StubAuthenticator>());
-    chatter.handle(Chatter::Msg::Register{"Sender"});
-    chatter.handle(Chatter::Msg::Register{"Receiver"});
-    auto sender = chatter.handle(Chatter::Msg::Login{"Sender", "pass"});
-    auto receiver = chatter.handle(Chatter::Msg::Login{"Receiver", "pass"});
+    Users users;
+    Chatter::Server chatter(StubConnectionFactory{data}, std::make_unique<StubAuthenticator>(users));
+    users.willBeRegistered("Sender", "pass1");
+    users.willBeRegistered("Receiver", "pass2");
+    users.willBeAllowed("Sender", "pass1");
+    users.willBeAllowed("Receiver", "pass2");
+    chatter.handle(Chatter::Msg::Register{"Sender", "pass1"});
+    chatter.handle(Chatter::Msg::Register{"Receiver", "pass2"});
+    auto sender = chatter.handle(Chatter::Msg::Login{"Sender", "pass1"});
+    auto receiver = chatter.handle(Chatter::Msg::Login{"Receiver", "pass2"});
     chatter.handle(Chatter::Msg::OnLine{sender.cookie, "127.0.0.1", "50000"});
     chatter.handle(Chatter::Msg::OnLine{receiver.cookie, "127.0.0.1", "50001"});
 
@@ -353,6 +503,7 @@ int main()
     RUN_TEST(genearesDifferentCookies);
     RUN_TEST(registerUserSecondTimeWillFail);
     RUN_TEST(loginUnregisteredUserWillFail);
+    RUN_TEST(logInWillFailWhenUserIsNotAuthenticated);
     RUN_TEST(loginRegisteredUserWillReturnCookie);
     RUN_TEST(loginSecondTimeWillFail);
     RUN_TEST(loginAfyerLogoutWillReturnCookie);
