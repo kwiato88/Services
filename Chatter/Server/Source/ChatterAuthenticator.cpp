@@ -3,16 +3,17 @@
 namespace Chatter
 {
 
-Authenticator::PasswordHash Authenticator::hash(const Password& p_pass) const
+Authenticator::PasswordHash Authenticator::hash(const Password& p_pass, const Salt& p_salt) const
 {
-    //TODO: use sha-256
-    //TODO: add salt
-    return std::hash<Password>{}(p_pass); 
+    //TODO: consider using library to use better hash function and generate salt
+    return std::hash<Password>{}(p_pass + p_salt); 
 }
 
 bool Authenticator::addUser(const std::string& p_user, const std::string& p_password)
 {
-    return users.emplace(p_user, hash(p_password)).second;
+    static const std::size_t saltLength = 16;
+    auto salt = generator.generate(saltLength);
+    return users.emplace(p_user, UserData{hash(p_password, salt), salt}).second;
 }
 
 void Authenticator::removeUser(const std::string& p_user)
@@ -23,7 +24,7 @@ void Authenticator::removeUser(const std::string& p_user)
 bool Authenticator::authenticate(const std::string& p_user, const std::string& p_password)
 {
     auto it = users.find(p_user);
-    return it != users.end() && it->second == hash(p_password);
+    return it != users.end() && it->second.hash == hash(p_password, it->second.salt);
 }
 
 }

@@ -5,6 +5,7 @@
 #include "ChatterCookie.hpp"
 #include "ChatterServer.hpp"
 #include "ChatterCodec.hpp"
+#include "ChatterAuthenticator.hpp"
 #include "MsgConnection.hpp"
 #include "simpleUt/SimpleUt.hpp"
 
@@ -188,6 +189,52 @@ TEST(genearesDifferentCookies)
     IS_NOT_EQ(cookie1.toString(), cookie2.toString());
     IS_NOT_EQ(cookie1.toString(), cookie3.toString());
     IS_NOT_EQ(cookie2.toString(), cookie3.toString());
+}
+
+TEST(unknownUserWillNotBeAllowed)
+{
+    Chatter::Authenticator authenticator;
+    IS_FALSE(authenticator.authenticate("MyUser", "Pass"));
+}
+
+TEST(willNotAllowUserWithWrongPassword)
+{
+    Chatter::Authenticator authenticator;
+    IS_TRUE(authenticator.addUser("MyUser", "Pass"));
+    IS_FALSE(authenticator.authenticate("MyUser", "Pass1"));
+}
+
+TEST(willAllowUserWithCorrectPassword)
+{
+    Chatter::Authenticator authenticator;
+    IS_TRUE(authenticator.addUser("MyUser", "Pass"));
+    IS_TRUE(authenticator.authenticate("MyUser", "Pass"));
+}
+
+TEST(willNotAllowDifferentUserWithSamePassword)
+{
+    Chatter::Authenticator authenticator;
+    authenticator.addUser("MyUser", "Pass");
+    IS_FALSE(authenticator.authenticate("MyUser1", "Pass"));
+}
+
+TEST(willNotAddUserTwice)
+{
+    Chatter::Authenticator authenticator;
+    IS_TRUE(authenticator.addUser("MyUser", "Pass1"));
+    IS_FALSE(authenticator.addUser("MyUser", "Pass2"));
+    IS_TRUE(authenticator.authenticate("MyUser", "Pass1"));
+    IS_FALSE(authenticator.authenticate("MyUser", "Pass2"));
+}
+
+TEST(changeUserPassword)
+{
+    Chatter::Authenticator authenticator;
+    authenticator.addUser("MyUser", "Pass1");
+    authenticator.removeUser("MyUser");
+    IS_TRUE(authenticator.addUser("MyUser", "Pass2"));
+    IS_TRUE(authenticator.authenticate("MyUser", "Pass2"));
+    IS_FALSE(authenticator.authenticate("MyUser", "Pass1"));
 }
 
 TEST(registerUserSecondTimeWillFail)
@@ -514,6 +561,14 @@ int main()
     RUN_TEST(generateAlfanumericStringWithGivenLength);
     RUN_TEST(cookieHas16AlfanumerifChars);
     RUN_TEST(genearesDifferentCookies);
+
+    RUN_TEST(unknownUserWillNotBeAllowed);
+    RUN_TEST(willNotAllowUserWithWrongPassword);
+    RUN_TEST(willAllowUserWithCorrectPassword);
+    RUN_TEST(willNotAllowDifferentUserWithSamePassword);
+    RUN_TEST(willNotAddUserTwice);
+    RUN_TEST(changeUserPassword);
+
     RUN_TEST(registerUserSecondTimeWillFail);
     RUN_TEST(loginUnregisteredUserWillFail);
     RUN_TEST(logInWillFailWhenUserIsNotAuthenticated);

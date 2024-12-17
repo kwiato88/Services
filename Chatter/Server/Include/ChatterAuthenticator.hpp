@@ -3,6 +3,7 @@
 #include <string>
 #include <map>
 #include "ChatterIAuthenticator.hpp"
+#include "ChatterAlfanumericGenerator.hpp"
 
 namespace Chatter
 {
@@ -18,10 +19,17 @@ private:
     using User = std::string;
     using Password = std::string;
     using PasswordHash = std::size_t;
+    using Salt = std::string;
+    struct UserData
+    {
+        PasswordHash hash;
+        Salt salt;
+    };
 
-    PasswordHash hash(const Password& p_pass) const;
+    PasswordHash hash(const Password& p_pass, const Salt& p_salt) const;
 
-    std::map<User, PasswordHash> users;
+    AlfanumericGenerator generator;
+    std::map<User, UserData> users;
 };
 
 }
