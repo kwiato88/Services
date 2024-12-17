@@ -191,6 +191,28 @@ TEST(genearesDifferentCookies)
     IS_NOT_EQ(cookie2.toString(), cookie3.toString());
 }
 
+TEST(addUserWithSpecialChars)
+{
+    Chatter::Authenticator authenticator;
+    IS_TRUE(authenticator.addUser("My_User@dom.com", "Pass"));
+    IS_TRUE(authenticator.addUser("User", "!P@a#s$s%1^0&w*A_2-4?."));
+}
+
+TEST(userWithNotAllowedCharsWillNotBeAdded)
+{
+    Chatter::Authenticator authenticator;
+    IS_FALSE(authenticator.addUser("", "pass"));
+    IS_FALSE(authenticator.addUser("My User", "pass"));
+    IS_FALSE(authenticator.addUser("MyUser;", "pass"));
+    IS_FALSE(authenticator.addUser("My/User", "pass"));
+    IS_FALSE(authenticator.addUser("My#User", "pass"));
+    
+    IS_FALSE(authenticator.addUser("user1", ""));
+    IS_FALSE(authenticator.addUser("user2", "pas;s"));
+    IS_FALSE(authenticator.addUser("user3", "pa/ss"));
+    IS_FALSE(authenticator.addUser("user4", "pa\\ss"));
+}
+
 TEST(unknownUserWillNotBeAllowed)
 {
     Chatter::Authenticator authenticator;
@@ -562,6 +584,8 @@ int main()
     RUN_TEST(cookieHas16AlfanumerifChars);
     RUN_TEST(genearesDifferentCookies);
 
+    RUN_TEST(addUserWithSpecialChars);
+    RUN_TEST(userWithNotAllowedCharsWillNotBeAdded);
     RUN_TEST(unknownUserWillNotBeAllowed);
     RUN_TEST(willNotAllowUserWithWrongPassword);
     RUN_TEST(willAllowUserWithCorrectPassword);

@@ -1,5 +1,6 @@
 #include <fstream>
 #include <sstream>
+#include <algorithm>
 #include "ChatterAuthenticator.hpp"
 
 namespace Chatter
@@ -16,11 +17,30 @@ std::string generateSalt(AlfanumericGenerator& p_generator)
     static const std::size_t saltLength = 16;
     return p_generator.generate(saltLength);
 }
+bool isUserNameValid(const std::string& p_name)
+{
+    static const std::string alloweChars = "@._-";
+    return !p_name.empty() && std::all_of(p_name.begin(), p_name.end(), [](auto c)
+    {
+        return std::isalnum(c) || (alloweChars.find(c) != std::string::npos);
+    });
+}
+bool isPasswordValid(const std::string& p_pass)
+{
+    static const std::string allowedChars = "!@#$%^&*_-?.";
+    return !p_pass.empty() && std::all_of(p_pass.begin(), p_pass.end(), [](auto c)
+    {
+        return std::isalnum(c) || (allowedChars.find(c) != std::string::npos);
+    });
+}
 }
 
 bool Authenticator::addUser(const std::string& p_user, const std::string& p_password)
 {
-    //TODO: validate user and password
+    if(!isUserNameValid(p_user) || !isPasswordValid(p_password))
+    {
+        return false;
+    }
     auto salt = generateSalt(generator);
     return users.emplace(p_user, UserData{hash(p_password, salt), salt}).second;
 }
@@ -48,7 +68,10 @@ try
     {
         return false;
     }
-    //TODO: validate user and password
+    if(!isUserNameValid(p_user) || !isPasswordValid(p_password))
+    {
+        return false;
+    }
     auto salt = generateSalt(generator);
     appendPending(p_user, salt, hash(p_password, salt));
     return true;

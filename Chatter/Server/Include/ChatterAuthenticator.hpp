@@ -50,6 +50,7 @@ private:
     std::tuple<User, Salt, PasswordHash> readUser(const std::string& p_line) const;
     void appendPending(const User& p_user, const Salt& p_salt, const PasswordHash& p_hash) const;
 
+    //TODO: consider using databse to store users
     std::filesystem::path users;
     std::filesystem::path pendingUsers;
     AlfanumericGenerator generator;
