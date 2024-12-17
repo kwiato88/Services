@@ -2,6 +2,8 @@
 
 #include <string>
 #include <map>
+#include <tuple>
+#include <filesystem>
 #include "ChatterIAuthenticator.hpp"
 #include "ChatterAlfanumericGenerator.hpp"
 
@@ -26,10 +28,31 @@ private:
         Salt salt;
     };
 
-    PasswordHash hash(const Password& p_pass, const Salt& p_salt) const;
-
     AlfanumericGenerator generator;
     std::map<User, UserData> users;
+};
+
+class AuthenticatorWithStorage : public IAuthenticator
+{
+public:
+    AuthenticatorWithStorage(const std::filesystem::path& p_dir);
+    bool addUser(const std::string& p_user, const std::string& p_password) override;
+    void removeUser(const std::string& p_user) override;
+    bool authenticate(const std::string& p_user, const std::string& p_password) override;
+
+private:
+    using User = std::string;
+    using Password = std::string;
+    using PasswordHash = std::size_t;
+    using Salt = std::string;
+
+    bool existsIn(const std::filesystem::path& p_file, const User& p_user) const;
+    std::tuple<User, Salt, PasswordHash> readUser(const std::string& p_line) const;
+    void appendPending(const User& p_user, const Salt& p_salt, const PasswordHash& p_hash) const;
+
+    std::filesystem::path users;
+    std::filesystem::path pendingUsers;
+    AlfanumericGenerator generator;
 };
 
 }
