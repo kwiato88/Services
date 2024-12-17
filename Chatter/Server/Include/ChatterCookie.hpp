@@ -2,6 +2,7 @@
 
 #include <string>
 #include <set>
+#include "ChatterAlfanumericGenerator.hpp"
 
 namespace Chatter
 {
@@ -27,14 +28,14 @@ private:
 class CookieStore
 {
 public:
-    CookieStore();
     Cookie allocateCookie();
     void releaseCookie(const Cookie& p_cookie);
 
 private:
-    Cookie generateCookie() const;
+    Cookie generateCookie();
     bool exists(const Cookie& p_cookie) const;
 
+    AlfanumericGenerator generator;
     std::set<Cookie> cookies;
 };
 

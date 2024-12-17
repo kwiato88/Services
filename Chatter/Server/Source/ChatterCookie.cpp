@@ -1,6 +1,4 @@
 #include <stdexcept>
-#include <ctime>
-#include <cstdlib>
 #include <algorithm>
 #include "ChatterCookie.hpp"
 
@@ -32,22 +30,10 @@ std::string Cookie::toString() const
     return cookie;
 }
 
-CookieStore::CookieStore()
+Cookie CookieStore::generateCookie()
 {
-    std::srand(std::time(nullptr));
-}
-
-Cookie CookieStore::generateCookie() const
-{
-    static const std::string chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-    static const size_t cookieLength = 16;
-    std::string cookie;
-    cookie.reserve(cookieLength);
-    for(size_t i = 0; i < cookieLength; ++i)
-    {
-        cookie.push_back(chars[std::rand() % chars.size()]);
-    }
-    return Cookie(cookie);
+    static const std::size_t cookieLength = 16;
+    return Cookie(generator.generate(cookieLength));
 }
 
 bool CookieStore::exists(const Cookie& p_cookie) const

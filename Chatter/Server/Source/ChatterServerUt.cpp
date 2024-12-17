@@ -1,6 +1,7 @@
 #include <cctype>
 #include <vector>
 #include <algorithm>
+#include "ChatterAlfanumericGenerator.hpp"
 #include "ChatterCookie.hpp"
 #include "ChatterServer.hpp"
 #include "ChatterCodec.hpp"
@@ -155,6 +156,17 @@ public:
     }
     Users& users;
 };
+
+TEST(generateAlfanumericStringWithGivenLength)
+{
+    Chatter::AlfanumericGenerator generator;
+    auto result = generator.generate(50);
+    IS_EQ(50, result.size());
+    for(auto c : result)
+    {
+        IS_TRUE(std::isalnum(c));
+    }
+}
 
 TEST(cookieHas16AlfanumerifChars)
 {
@@ -499,6 +511,7 @@ int main()
 {
     MAIN_START;
     
+    RUN_TEST(generateAlfanumericStringWithGivenLength);
     RUN_TEST(cookieHas16AlfanumerifChars);
     RUN_TEST(genearesDifferentCookies);
     RUN_TEST(registerUserSecondTimeWillFail);
