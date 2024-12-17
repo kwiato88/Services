@@ -49,6 +49,7 @@ private:
     bool existsIn(const std::filesystem::path& p_file, const User& p_user) const;
     std::tuple<User, Salt, PasswordHash> readUser(const std::string& p_line) const;
     void appendPending(const User& p_user, const Salt& p_salt, const PasswordHash& p_hash) const;
+    void removeFrom(const std::filesystem::path& p_file, const User& p_user);
 
     //TODO: consider using databse to store users
     std::filesystem::path users;

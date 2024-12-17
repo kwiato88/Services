@@ -83,7 +83,34 @@ catch (std::exception&)
 
 void AuthenticatorWithStorage::removeUser(const std::string& p_user)
 {
-    //remove from pending and users
+    removeFrom(pendingUsers, p_user);
+    removeFrom(users, p_user);
+}
+
+void  AuthenticatorWithStorage::removeFrom(const std::filesystem::path& p_file, const User& p_user)
+try
+{
+    std::filesystem::path tempFilePath = p_file;
+    tempFilePath.replace_extension("tmp");
+    std::ifstream inputFile(p_file);
+    std::ofstream tempFile(tempFilePath);
+    std::string line;
+    while (std::getline(inputFile, line))
+    {
+        const auto [user, salt, hash] = readUser(line);
+        if (user != p_user)
+        {
+            tempFile << line << '\n';
+        }
+    }
+
+    inputFile.close();
+    tempFile.close();
+    std::filesystem::remove(p_file);
+    std::filesystem::rename(tempFilePath, p_file);
+}
+catch (std::exception&)
+{
 }
 
 bool AuthenticatorWithStorage::authenticate(const std::string& p_user, const std::string& p_password)
