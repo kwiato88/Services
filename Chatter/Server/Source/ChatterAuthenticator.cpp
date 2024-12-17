@@ -1,6 +1,7 @@
 #include <fstream>
 #include <sstream>
 #include <algorithm>
+#include <iostream>
 #include "ChatterAuthenticator.hpp"
 
 namespace Chatter
@@ -76,8 +77,9 @@ try
     appendPending(p_user, salt, hash(p_password, salt));
     return true;
 }
-catch (std::exception&)
+catch (std::exception& e)
 {
+    std::cerr << "Authenticator add " << p_user << " failed: " << e.what() << std::endl;
     return false;
 }
 
@@ -109,8 +111,9 @@ try
     std::filesystem::remove(p_file);
     std::filesystem::rename(tempFilePath, p_file);
 }
-catch (std::exception&)
+catch (std::exception& e)
 {
+    std::cerr << "Authenticator remove " << p_user << " from " << p_file << " failed: " << e.what() << std::endl;
 }
 
 bool AuthenticatorWithStorage::authenticate(const std::string& p_user, const std::string& p_password)
