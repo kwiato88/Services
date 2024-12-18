@@ -90,6 +90,10 @@ Msg::MessageAck::Status Server::User::message(const Msg::Message& p_message)
 Server::Server(ConnectionFactory p_factory, std::unique_ptr<IAuthenticator> p_authenticator)
     : connections(p_factory), authenticator(std::move(p_authenticator))
 {
+    for(const auto& user : authenticator->activeUsers())
+    {
+        addUser(user);
+    }
 }
 
 bool Server::isLogged(const Cookie& p_cookie) const
@@ -114,8 +118,13 @@ Msg::Result Server::handle(const Msg::Register& p_msg)
     {
         return Msg::Result{false};
     }
-    allUsers.insert({p_msg.userName, std::make_shared<User>(connections, p_msg.userName)});
+    addUser(p_msg.userName);
     return Msg::Result{true};
+}
+
+void Server::addUser(const std::string& p_userName)
+{
+    allUsers.insert({p_userName, std::make_shared<User>(connections, p_userName)});
 }
 
 void Server::handle(const Msg::UnRegister& p_msg)

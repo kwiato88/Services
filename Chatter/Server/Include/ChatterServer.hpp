@@ -70,6 +70,7 @@ private:
         static const std::size_t bufferCapacity = 512;
     };
 
+    void addUser(const std::string& p_userName);
     bool isLogged(const Cookie& p_cookie) const;
     bool isLogged(const std::string& p_userName) const;
     bool isRegistered(const std::string& p_userName) const;
