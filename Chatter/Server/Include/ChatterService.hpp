@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <filesystem>
 #include "ChatterMsg.hpp"
 #include "ChatterCodec.hpp"
 #include "ChatterServer.hpp"
@@ -12,7 +13,7 @@ using BaseService = msg::Service<Msg::Json::Codec>;
 class Service : public BaseService
 {
 public:
-    Service();
+    Service(const std::filesystem::path& p_configDir);
     ~Service();
 
 private:

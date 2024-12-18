@@ -1,5 +1,6 @@
 #include <iostream>
 #include <stdexcept>
+#include <filesystem>
 #include "ChatterService.hpp"
 #include "SockSocketUtils.hpp"
 
@@ -10,7 +11,7 @@ int main()
         sock::init();
         {
             std::cout << "Chatter: create service" << std::endl;
-            Chatter::Service chatter;
+            Chatter::Service chatter(std::filesystem::path("."));
             chatter.start();
             std::cout << "Chatter: service finished" << std::endl;
         }

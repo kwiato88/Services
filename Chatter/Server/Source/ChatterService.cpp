@@ -1,5 +1,6 @@
 #include <iostream>
 #include "ChatterService.hpp"
+#include "ChatterAuthenticator.hpp"
 #include "ServiceProviderClient.hpp"
 #include "MsgTcpIpServer.hpp"
 #include "MsgTcpIpConnection.hpp"
@@ -27,11 +28,11 @@ public:
     }
 };
 
-Service::Service()
+Service::Service(const std::filesystem::path& p_configDir)
     : BaseService(std::bind(&Service::createServer, this)),
       chatter(std::make_shared<Server>(
         [](const auto& p_host, const auto& p_port) { return std::make_unique<msg::TcpIpConnection>(p_host, p_port); },
-        std::make_unique<AllowAll>()))
+        std::make_unique<AuthenticatorWithStorage>(p_configDir)))
 {
     setup();
     add<Msg::Register, Msg::Result>();
