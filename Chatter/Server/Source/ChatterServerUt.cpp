@@ -9,6 +9,12 @@
 #include "MsgConnection.hpp"
 #include "simpleUt/SimpleUt.hpp"
 
+#define IS_ALFANUM(param) do { \
+    auto l_param = (param); \
+    for(auto c : l_param) { \
+        IS_TRUE(std::isalnum(c)); \
+    }} while(false)
+
 class ExchangeData
 {
 public:
@@ -158,29 +164,23 @@ public:
     Users& users;
 };
 
-TEST(generateAlfanumericStringWithGivenLength)
+TEST(AlfanumericGenerator_generateStringWithGivenLength)
 {
     Chatter::AlfanumericGenerator generator;
     auto result = generator.generate(50);
     IS_EQ(50, result.size());
-    for(auto c : result)
-    {
-        IS_TRUE(std::isalnum(c));
-    }
+    IS_ALFANUM(result);
 }
 
-TEST(cookieHas16AlfanumerifChars)
+TEST(Cookie_cookieHas16AlfanumerifChars)
 {
     Chatter::CookieStore cookies;
     auto cookie = cookies.allocateCookie();
     IS_EQ(16, cookie.toString().size());
-    for(auto c : cookie.toString())
-    {
-        IS_TRUE(std::isalnum(c));
-    }
+    IS_ALFANUM(cookie.toString());
 }
 
-TEST(genearesDifferentCookies)
+TEST(Cookie_genearesDifferentCookies)
 {
     Chatter::CookieStore cookies;
     auto cookie1 = cookies.allocateCookie();
@@ -191,14 +191,14 @@ TEST(genearesDifferentCookies)
     IS_NOT_EQ(cookie2.toString(), cookie3.toString());
 }
 
-TEST(addUserWithSpecialChars)
+TEST(Authenticator_addUserWithSpecialChars)
 {
     Chatter::Authenticator authenticator;
     IS_TRUE(authenticator.addUser("My_User@dom.com", "Pass"));
     IS_TRUE(authenticator.addUser("User", "!P@a#s$s%1^0&w*A_2-4?."));
 }
 
-TEST(userWithNotAllowedCharsWillNotBeAdded)
+TEST(Authenticator_userWithNotAllowedCharsWillNotBeAdded)
 {
     Chatter::Authenticator authenticator;
     IS_FALSE(authenticator.addUser("", "pass"));
@@ -213,34 +213,34 @@ TEST(userWithNotAllowedCharsWillNotBeAdded)
     IS_FALSE(authenticator.addUser("user4", "pa\\ss"));
 }
 
-TEST(unknownUserWillNotBeAllowed)
+TEST(Authenticator_unknownUserWillNotBeAllowed)
 {
     Chatter::Authenticator authenticator;
     IS_FALSE(authenticator.authenticate("MyUser", "Pass"));
 }
 
-TEST(willNotAllowUserWithWrongPassword)
+TEST(Authenticator_willNotAllowUserWithWrongPassword)
 {
     Chatter::Authenticator authenticator;
     IS_TRUE(authenticator.addUser("MyUser", "Pass"));
     IS_FALSE(authenticator.authenticate("MyUser", "Pass1"));
 }
 
-TEST(willAllowUserWithCorrectPassword)
+TEST(Authenticator_willAllowUserWithCorrectPassword)
 {
     Chatter::Authenticator authenticator;
     IS_TRUE(authenticator.addUser("MyUser", "Pass"));
     IS_TRUE(authenticator.authenticate("MyUser", "Pass"));
 }
 
-TEST(willNotAllowDifferentUserWithSamePassword)
+TEST(Authenticator_willNotAllowDifferentUserWithSamePassword)
 {
     Chatter::Authenticator authenticator;
     authenticator.addUser("MyUser", "Pass");
     IS_FALSE(authenticator.authenticate("MyUser1", "Pass"));
 }
 
-TEST(willNotAddUserTwice)
+TEST(Authenticator_willNotAddUserTwice)
 {
     Chatter::Authenticator authenticator;
     IS_TRUE(authenticator.addUser("MyUser", "Pass1"));
@@ -249,7 +249,7 @@ TEST(willNotAddUserTwice)
     IS_FALSE(authenticator.authenticate("MyUser", "Pass2"));
 }
 
-TEST(changeUserPassword)
+TEST(Authenticator_changeUserPassword)
 {
     Chatter::Authenticator authenticator;
     authenticator.addUser("MyUser", "Pass1");
@@ -315,12 +315,6 @@ void approveAll(File& p_pending, File& p_approved)
     p_approved.set(p_pending.get());
     p_pending.remove();
 }
-
-#define IS_ALFANUM(param) do { \
-    auto l_param = (param); \
-    for(auto c : l_param) { \
-        IS_TRUE(std::isalnum(c)); \
-    }} while(false)
 
 TEST(AuthenticatorWithStorage_registerUser)
 {
@@ -475,7 +469,7 @@ TEST(AuthenticatorWithStorage_authenticateUserWithNewPassword)
     IS_TRUE(auth.authenticate("User", "Pass1"));
 }
 
-TEST(registerUserSecondTimeWillFail)
+TEST(Server_registerUserSecondTimeWillFail)
 {
     ExchangeData data;
     Users users;
@@ -489,7 +483,7 @@ TEST(registerUserSecondTimeWillFail)
     IS_FALSE(chatter.handle(Chatter::Msg::Register{"MyUser", "Pass"}).success);
 }
 
-TEST(loginUnregisteredUserWillFail)
+TEST(Server_loginUnregisteredUserWillFail)
 {
     ExchangeData data;
     Users users;
@@ -497,7 +491,7 @@ TEST(loginUnregisteredUserWillFail)
     IS_TRUE(chatter.handle(Chatter::Msg::Login{"MyUser", "pass"}).cookie.empty());
 }
 
-TEST(logInWillFailWhenUserIsNotAuthenticated)
+TEST(Server_logInWillFailWhenUserIsNotAuthenticated)
 {
     ExchangeData data;
     Users users;
@@ -510,7 +504,7 @@ TEST(logInWillFailWhenUserIsNotAuthenticated)
     users.wasAuthenticated("MyUser", "pass"); 
 }
 
-TEST(loginRegisteredUserWillReturnCookie)
+TEST(Server_loginRegisteredUserWillReturnCookie)
 {
     ExchangeData data;
     Users users;
@@ -523,7 +517,7 @@ TEST(loginRegisteredUserWillReturnCookie)
     users.wasAuthenticated("MyUser", "Pass");
 }
 
-TEST(loginSecondTimeWillFail)
+TEST(Server_loginSecondTimeWillFail)
 {
     ExchangeData data;
     Users users;
@@ -536,7 +530,7 @@ TEST(loginSecondTimeWillFail)
     IS_EQ("0", chatter.handle(Chatter::Msg::Login{"MyUser", "Pass"}).cookie);
 }
 
-TEST(loginAfyerLogoutWillReturnCookie)
+TEST(Server_loginAfyerLogoutWillReturnCookie)
 {
     ExchangeData data;
     Users users;
@@ -550,7 +544,7 @@ TEST(loginAfyerLogoutWillReturnCookie)
     IS_FALSE(chatter.handle(Chatter::Msg::Login{"MyUser", "Pass"}).cookie.empty());
 }
 
-TEST(registerUnregisteredUser)
+TEST(Server_registerUnregisteredUser)
 {
     ExchangeData data;
     Users users;
@@ -564,7 +558,7 @@ TEST(registerUnregisteredUser)
     IS_TRUE(chatter.handle(Chatter::Msg::Register{"MyUser", "Pass"}).success);
 }
 
-TEST(onlineWillReturnTrue)
+TEST(Server_onlineWillReturnTrue)
 {
     ExchangeData data;
     Users users;
@@ -577,7 +571,7 @@ TEST(onlineWillReturnTrue)
     IS_TRUE(chatter.handle(Chatter::Msg::OnLine{cookie.cookie, "127.0.0.1", "50000"}).success);
 }
 
-TEST(onlineUnregisteredUserWillReturnFalse)
+TEST(Server_onlineUnregisteredUserWillReturnFalse)
 {
     ExchangeData data;
     Users users;
@@ -585,7 +579,7 @@ TEST(onlineUnregisteredUserWillReturnFalse)
     IS_FALSE(chatter.handle(Chatter::Msg::OnLine{"MyUser", "127.0.0.1", "50000"}).success);
 }
 
-TEST(onlineUnloggedUserWillReturnFalse)
+TEST(Server_onlineUnloggedUserWillReturnFalse)
 {
     ExchangeData data;
     Users users;
@@ -595,7 +589,7 @@ TEST(onlineUnloggedUserWillReturnFalse)
     IS_FALSE(chatter.handle(Chatter::Msg::OnLine{"MyUser", "127.0.0.1", "50000"}).success);
 }
 
-TEST(sendMessageFromUnknownUserWillFail)
+TEST(Server_sendMessageFromUnknownUserWillFail)
 {
     ExchangeData data;
     Users users;
@@ -603,7 +597,7 @@ TEST(sendMessageFromUnknownUserWillFail)
     IS_EQ(Chatter::Msg::MessageAck::Status::UnknownUser, chatter.handle(Chatter::Msg::Message{"Sender", "Receiver", "Hello"}).status);
 }
 
-TEST(sendMessageFromUnloggedUserWillFail)
+TEST(Server_sendMessageFromUnloggedUserWillFail)
 {
     ExchangeData data;
     Users users;
@@ -613,7 +607,7 @@ TEST(sendMessageFromUnloggedUserWillFail)
     IS_EQ(Chatter::Msg::MessageAck::Status::UnknownUser, chatter.handle(Chatter::Msg::Message{"Sender", "Receiver", "Hello"}).status);
 }
 
-TEST(sendMessageToUnknownUserWillFail)
+TEST(Server_sendMessageToUnknownUserWillFail)
 {
     ExchangeData data;
     Users users;
@@ -626,7 +620,7 @@ TEST(sendMessageToUnknownUserWillFail)
     IS_EQ(Chatter::Msg::MessageAck::Status::UnknownUser, chatter.handle(Chatter::Msg::Message{sender.cookie, "Receiver", "Hello"}).status);
 }
 
-TEST(sendMessageToNotLoggedUserWillReturnBufferdStatus)
+TEST(Server_sendMessageToNotLoggedUserWillReturnBufferdStatus)
 {
     ExchangeData data;
     Users users;
@@ -641,7 +635,7 @@ TEST(sendMessageToNotLoggedUserWillReturnBufferdStatus)
     IS_EQ(Chatter::Msg::MessageAck::Status::Buffered, chatter.handle(Chatter::Msg::Message{sender.cookie, "Receiver", "Hello"}).status);
 }
 
-TEST(sendMessageToOfflineUserWillReturnBufferdStatus)
+TEST(Server_sendMessageToOfflineUserWillReturnBufferdStatus)
 {
     ExchangeData data;
     Users users;
@@ -658,7 +652,7 @@ TEST(sendMessageToOfflineUserWillReturnBufferdStatus)
     IS_EQ(Chatter::Msg::MessageAck::Status::Buffered, chatter.handle(Chatter::Msg::Message{sender.cookie, "Receiver", "Hello"}).status);
 }
 
-TEST(sendMessageToLoggedoutUserWillReturnBufferdStatus)
+TEST(Server_sendMessageToLoggedoutUserWillReturnBufferdStatus)
 {
     ExchangeData data;
     Users users;
@@ -677,7 +671,7 @@ TEST(sendMessageToLoggedoutUserWillReturnBufferdStatus)
     IS_EQ(Chatter::Msg::MessageAck::Status::Buffered, chatter.handle(Chatter::Msg::Message{sender.cookie, "Receiver", "Hello"}).status);
 }
 
-TEST(sendMessageToUserSwitchedToOfflineWillReturnBufferdStatus)
+TEST(Server_sendMessageToUserSwitchedToOfflineWillReturnBufferdStatus)
 {
     ExchangeData data;
     Users users;
@@ -696,7 +690,7 @@ TEST(sendMessageToUserSwitchedToOfflineWillReturnBufferdStatus)
     IS_EQ(Chatter::Msg::MessageAck::Status::Buffered, chatter.handle(Chatter::Msg::Message{sender.cookie, "Receiver", "Hello"}).status);
 }
 
-TEST(sendMessage)
+TEST(Server_sendMessage)
 {
     ExchangeData data;
     Users users;
@@ -721,7 +715,7 @@ TEST(sendMessage)
     IS_EQ("Sender", sentToReceiver.from);
 }
 
-TEST(sendMessageToNewAddr)
+TEST(Server_sendMessageToNewAddr)
 {
     ExchangeData data;
     Users users;
@@ -743,7 +737,7 @@ TEST(sendMessageToNewAddr)
     IS_EQ("50002", data.connectedToPort());
 }
 
-TEST(sendBufferedMessages)
+TEST(Server_sendBufferedMessages)
 {
     ExchangeData data;
     Users users;
@@ -772,7 +766,7 @@ TEST(sendBufferedMessages)
     IS_EQ("Sender", sentMsg.from);
 }
 
-TEST(sendMessageWithSpecialChars)
+TEST(Server_sendMessageWithSpecialChars)
 {
     ExchangeData data;
     Users users;
@@ -796,18 +790,19 @@ int main()
 {
     MAIN_START;
     
-    RUN_TEST(generateAlfanumericStringWithGivenLength);
-    RUN_TEST(cookieHas16AlfanumerifChars);
-    RUN_TEST(genearesDifferentCookies);
+    RUN_TEST(AlfanumericGenerator_generateStringWithGivenLength);
+    RUN_TEST(Cookie_cookieHas16AlfanumerifChars);
+    RUN_TEST(Cookie_genearesDifferentCookies);
 
-    RUN_TEST(addUserWithSpecialChars);
-    RUN_TEST(userWithNotAllowedCharsWillNotBeAdded);
-    RUN_TEST(unknownUserWillNotBeAllowed);
-    RUN_TEST(willNotAllowUserWithWrongPassword);
-    RUN_TEST(willAllowUserWithCorrectPassword);
-    RUN_TEST(willNotAllowDifferentUserWithSamePassword);
-    RUN_TEST(willNotAddUserTwice);
-    RUN_TEST(changeUserPassword);
+    RUN_TEST(Authenticator_addUserWithSpecialChars);
+    RUN_TEST(Authenticator_userWithNotAllowedCharsWillNotBeAdded);
+    RUN_TEST(Authenticator_unknownUserWillNotBeAllowed);
+    RUN_TEST(Authenticator_willNotAllowUserWithWrongPassword);
+    RUN_TEST(Authenticator_willAllowUserWithCorrectPassword);
+    RUN_TEST(Authenticator_willNotAllowDifferentUserWithSamePassword);
+    RUN_TEST(Authenticator_willNotAddUserTwice);
+    RUN_TEST(Authenticator_changeUserPassword);
+
     RUN_TEST(AuthenticatorWithStorage_registerUser);
     RUN_TEST(AuthenticatorWithStorage_samePasswordWillHaveDifferentSaltAndHash);
     RUN_TEST(AuthenticatorWithStorage_willNotRegisterSameUserTwice);
@@ -820,27 +815,27 @@ int main()
     RUN_TEST(AuthenticatorWithStorage_authenticationWithWrongPasswordWillFail);
     RUN_TEST(AuthenticatorWithStorage_authenticateUserWithNewPassword);
 
-    RUN_TEST(registerUserSecondTimeWillFail);
-    RUN_TEST(loginUnregisteredUserWillFail);
-    RUN_TEST(logInWillFailWhenUserIsNotAuthenticated);
-    RUN_TEST(loginRegisteredUserWillReturnCookie);
-    RUN_TEST(loginSecondTimeWillFail);
-    RUN_TEST(loginAfyerLogoutWillReturnCookie);
-    RUN_TEST(registerUnregisteredUser);
-    RUN_TEST(onlineWillReturnTrue);
-    RUN_TEST(onlineUnregisteredUserWillReturnFalse);
-    RUN_TEST(onlineUnloggedUserWillReturnFalse);
-    RUN_TEST(sendMessageFromUnknownUserWillFail);
-    RUN_TEST(sendMessageFromUnloggedUserWillFail);
-    RUN_TEST(sendMessageToUnknownUserWillFail);
-    RUN_TEST(sendMessageToNotLoggedUserWillReturnBufferdStatus);
-    RUN_TEST(sendMessageToOfflineUserWillReturnBufferdStatus);
-    RUN_TEST(sendMessageToLoggedoutUserWillReturnBufferdStatus);
-    RUN_TEST(sendMessageToUserSwitchedToOfflineWillReturnBufferdStatus);
-    RUN_TEST(sendMessage);
-    RUN_TEST(sendMessageToNewAddr);
-    RUN_TEST(sendBufferedMessages);
-    RUN_TEST(sendMessageWithSpecialChars);
+    RUN_TEST(Server_registerUserSecondTimeWillFail);
+    RUN_TEST(Server_loginUnregisteredUserWillFail);
+    RUN_TEST(Server_logInWillFailWhenUserIsNotAuthenticated);
+    RUN_TEST(Server_loginRegisteredUserWillReturnCookie);
+    RUN_TEST(Server_loginSecondTimeWillFail);
+    RUN_TEST(Server_loginAfyerLogoutWillReturnCookie);
+    RUN_TEST(Server_registerUnregisteredUser);
+    RUN_TEST(Server_onlineWillReturnTrue);
+    RUN_TEST(Server_onlineUnregisteredUserWillReturnFalse);
+    RUN_TEST(Server_onlineUnloggedUserWillReturnFalse);
+    RUN_TEST(Server_sendMessageFromUnknownUserWillFail);
+    RUN_TEST(Server_sendMessageFromUnloggedUserWillFail);
+    RUN_TEST(Server_sendMessageToUnknownUserWillFail);
+    RUN_TEST(Server_sendMessageToNotLoggedUserWillReturnBufferdStatus);
+    RUN_TEST(Server_sendMessageToOfflineUserWillReturnBufferdStatus);
+    RUN_TEST(Server_sendMessageToLoggedoutUserWillReturnBufferdStatus);
+    RUN_TEST(Server_sendMessageToUserSwitchedToOfflineWillReturnBufferdStatus);
+    RUN_TEST(Server_sendMessage);
+    RUN_TEST(Server_sendMessageToNewAddr);
+    RUN_TEST(Server_sendBufferedMessages);
+    RUN_TEST(Server_sendMessageWithSpecialChars);
     
     MAIN_END;
 }
