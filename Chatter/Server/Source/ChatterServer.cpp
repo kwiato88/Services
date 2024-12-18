@@ -8,7 +8,7 @@ namespace Chatter
 {
 
 Server::User::User(ConnectionFactory p_connections, const std::string& p_name)
-    : connections(p_connections), name(p_name), sendAction(&User::bufferMsg)
+    : connections(p_connections), name(p_name), logged(false), sendAction(&User::bufferMsg)
 {
 }
 
@@ -44,6 +44,21 @@ void Server::User::offline()
     host.clear();
     port.clear();
     sendAction = &User::bufferMsg;
+}
+
+void Server::User::login()
+{
+    logged = true;
+}
+
+void Server::User::logout()
+{
+    logged = false;
+}
+
+bool Server::User::isLogged() const
+{
+    return logged;
 }
 
 Msg::MessageAck::Status Server::User::sendMsg(const Msg::Message& p_message)
@@ -84,22 +99,22 @@ bool Server::isLogged(const Cookie& p_cookie) const
 
 bool Server::isLogged(const std::string& p_userName) const
 {
-    auto found = std::find_if(loggedUsers.begin(), loggedUsers.end(), [&p_userName](const auto& p_user) { return p_user.second.is(p_userName); });
-    return found != loggedUsers.end();
+    auto found = allUsers.find(p_userName);
+    return found != allUsers.end() && found->second->isLogged();
 }
 
-bool Server::isRegisteredNotLogged(const std::string& p_userName) const
+bool Server::isRegistered(const std::string& p_userName) const
 {
-    return notLoggedUsers.find(p_userName) != notLoggedUsers.end();
+    return allUsers.find(p_userName) != allUsers.end();
 }
 
 Msg::Result Server::handle(const Msg::Register& p_msg)
 {
-    if(isRegisteredNotLogged(p_msg.userName) || isLogged(p_msg.userName) || !authenticator->addUser(p_msg.userName, p_msg.password))
+    if(isRegistered(p_msg.userName) || !authenticator->addUser(p_msg.userName, p_msg.password))
     {
         return Msg::Result{false};
     }
-    notLoggedUsers[p_msg.userName] = User{ connections, p_msg.userName };
+    allUsers.insert({p_msg.userName, std::make_shared<User>(connections, p_msg.userName)});
     return Msg::Result{true};
 }
 
@@ -108,8 +123,9 @@ void Server::handle(const Msg::UnRegister& p_msg)
     auto it = loggedUsers.find(Cookie{p_msg.cookie});
     if(it != loggedUsers.end())
     {
-        it->second.offline();
-        authenticator->removeUser(it->second.getName());
+        it->second->offline();
+        authenticator->removeUser(it->second->getName());
+        allUsers.erase(it->second->getName());
         loggedUsers.erase(it);
         cookies.releaseCookie(Cookie{p_msg.cookie});
     }
@@ -126,14 +142,14 @@ try
     {
         return Msg::Cookie{"0"};
     }
-    auto user = notLoggedUsers.find(p_msg.userName);
-    if(user == notLoggedUsers.end())
+    auto user = allUsers.find(p_msg.userName);
+    if(user == allUsers.end())
     {
         return Msg::Cookie{""};
     }
     auto cookie = cookies.allocateCookie();
-    loggedUsers[cookie] = std::move(user->second);
-    notLoggedUsers.erase(user);
+    user->second->login();
+    loggedUsers[cookie] = user->second;
     return Msg::Cookie{ cookie.toString() };
 }
 catch(std::exception&)
@@ -148,59 +164,44 @@ void Server::handle(const Msg::Logout& p_msg)
     {
         return;
     }
-    it->second.offline();
-    notLoggedUsers[it->second.getName()] = std::move(it->second);
+    it->second->offline();
+    it->second->logout();
     loggedUsers.erase(it);
     cookies.releaseCookie(Cookie{p_msg.cookie});
 }
 
 Msg::Result Server::handle(const Msg::OnLine& p_msg)
 {
-    if(!isLogged(Cookie{p_msg.cookie}))
+    auto user = loggedUsers.find(Cookie{p_msg.cookie});
+    if(user == loggedUsers.end())
     {
         return Msg::Result{false};
     }
-    auto& user = loggedUsers[Cookie{p_msg.cookie}];
-    user.online(p_msg.host, p_msg.port);
+    user->second->online(p_msg.host, p_msg.port);
     return Msg::Result{true};
 }
 
 void Server::handle(const Msg::OffLine& p_msg)
 {
-    if(!isLogged(Cookie{p_msg.cookie}))
+    auto user = loggedUsers.find(Cookie{p_msg.cookie});
+    if(user == loggedUsers.end())
     {
         return;
     }
-    auto& user = loggedUsers[Cookie{p_msg.cookie}];
-    user.offline();
-}
-
-Server::User& Server::getUser(const std::string& p_userName)
-{
-    auto notlogged = notLoggedUsers.find(p_userName);
-    if(notlogged != notLoggedUsers.end())
-    {
-        return notlogged->second;
-    }
-    auto logged = std::find_if(loggedUsers.begin(), loggedUsers.end(), [&p_userName](const auto& p_user) { return p_user.second.is(p_userName); });
-    if(logged != loggedUsers.end())
-    {
-        return logged->second;
-    }
-    throw std::runtime_error("User not found");
+    user->second->offline();
 }
 
 Msg::MessageAck Server::handle(const Msg::Message& p_msg)
 {
-    if(!isLogged(Cookie{ p_msg.from }) || (!isRegisteredNotLogged(p_msg.to) && !isLogged(p_msg.to)))
+    if(!isLogged(Cookie{ p_msg.from }) || !isRegistered(p_msg.to))
     {
         return Msg::MessageAck{Msg::MessageAck::Status::UnknownUser};
     }
-    auto& receiver = getUser(p_msg.to);
-    auto& sender = loggedUsers[Cookie{p_msg.from}];
+    auto receiver = allUsers[p_msg.to];
+    auto sender = loggedUsers[Cookie{p_msg.from}];
     auto message = p_msg;
-    message.from = sender.getName();
-    return Msg::MessageAck{ receiver.message(message) };
+    message.from = sender->getName();
+    return Msg::MessageAck{ receiver->message(message) };
 }
 
 } // namespace Chatter

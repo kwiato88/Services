@@ -16,6 +16,7 @@ public:
     bool addUser(const std::string& p_user, const std::string& p_password) override;
     void removeUser(const std::string& p_user) override;
     bool authenticate(const std::string& p_user, const std::string& p_password) override;
+    std::list<std::string> activeUsers() override;
 
 private:
     using User = std::string;
@@ -39,6 +40,7 @@ public:
     bool addUser(const std::string& p_user, const std::string& p_password) override;
     void removeUser(const std::string& p_user) override;
     bool authenticate(const std::string& p_user, const std::string& p_password) override;
+    std::list<std::string> activeUsers() override;
 
 private:
     using User = std::string;

@@ -57,6 +57,16 @@ bool Authenticator::authenticate(const std::string& p_user, const std::string& p
     return it != users.end() && it->second.hash == hash(p_password, it->second.salt);
 }
 
+std::list<std::string> Authenticator::activeUsers()
+{
+    std::list<std::string> userList;
+    for (const auto& user : users)
+    {
+        userList.push_back(user.first);
+    }
+    return userList;
+}
+
 AuthenticatorWithStorage::AuthenticatorWithStorage(const std::filesystem::path& p_dir)
     : users(p_dir / "users.txt"),
       pendingUsers(p_dir / "pendingUsers.txt")
@@ -170,6 +180,21 @@ AuthenticatorWithStorage::readUser(const std::string& p_line) const
         return {user, salt, hash};
     }
     return {};
+}
+
+std::list<std::string> AuthenticatorWithStorage::activeUsers()
+{
+    std::ifstream file(users);
+    if(!file.is_open())
+        return {};
+    std::list<std::string> userList;
+    std::string line;
+    while (std::getline(file, line))
+    {
+        const auto [user, salt, hash] = readUser(line);
+        userList.push_back(user);
+    }
+    return userList;
 }
 
 }

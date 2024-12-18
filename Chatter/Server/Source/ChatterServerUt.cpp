@@ -161,6 +161,10 @@ public:
     {
         return users.onAuthenticate(p_usser, p_password);
     }
+    std::list<std::string> activeUsers()
+    {
+        return {};
+    }
     Users& users;
 };
 

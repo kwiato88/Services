@@ -49,6 +49,9 @@ private:
         std::string getName() const;
         void online(const std::string& p_host, const std::string& p_port);
         void offline();
+        void login();
+        void logout();
+        bool isLogged() const;
         Msg::MessageAck::Status message(const Msg::Message& p_message);
         
     private:
@@ -61,6 +64,7 @@ private:
         std::string name;
         std::string host;
         std::string port;
+        bool logged;
         SendFunction sendAction;
         std::queue<Msg::Message> bufferedMessages;
         static const std::size_t bufferCapacity = 512;
@@ -68,14 +72,13 @@ private:
 
     bool isLogged(const Cookie& p_cookie) const;
     bool isLogged(const std::string& p_userName) const;
-    bool isRegisteredNotLogged(const std::string& p_userName) const;
-    User& getUser(const std::string& p_userName);
+    bool isRegistered(const std::string& p_userName) const;
 
     ConnectionFactory connections;
     CookieStore cookies;
     std::unique_ptr<IAuthenticator> authenticator;
-    std::map<std::string, User> notLoggedUsers; //TODO: consoder storing all users
-    std::map<Cookie, User> loggedUsers;
+    std::map<std::string, std::shared_ptr<User> > allUsers;
+    std::map<Cookie, std::shared_ptr<User> > loggedUsers;
 };
 
 }

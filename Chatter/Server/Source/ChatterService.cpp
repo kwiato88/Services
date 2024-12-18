@@ -21,6 +21,10 @@ public:
     {
         return true;
     }
+    std::list<std::string> activeUsers()
+    {
+        return {};
+    }
 };
 
 Service::Service()
