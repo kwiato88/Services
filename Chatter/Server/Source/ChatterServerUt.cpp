@@ -259,6 +259,222 @@ TEST(changeUserPassword)
     IS_FALSE(authenticator.authenticate("MyUser", "Pass1"));
 }
 
+class File
+{
+public:
+    File(const std::filesystem::path& p_path, bool p_cleanup = true) : path(p_path), cleanup(p_cleanup) {}
+    ~File()
+    {
+        if(cleanup && std::filesystem::exists(path))
+        {
+            std::filesystem::remove(path);
+        }
+    }
+    std::vector<std::string> get()
+    {
+        std::ifstream file(path);
+        std::string line;
+        std::vector<std::string> lines;
+        while (std::getline(file, line))
+        {
+            lines.push_back(line);
+        }
+        return lines;
+    }
+    void set(const std::vector<std::string>& p_lines)
+    {
+        std::ofstream file(path);
+        for(const auto& line : p_lines)
+        {
+            file << line << "\n";
+        }
+    }
+    void remove()
+    {
+        if(std::filesystem::exists(path))
+        {
+            std::filesystem::remove(path);
+        }
+    }
+
+private:
+    std::filesystem::path path;
+    bool cleanup;
+};
+
+std::tuple<std::string, std::string, std::string> splitLine(const std::string& p_line)
+{
+    std::stringstream buff(p_line);
+    std::string user, salt, hash;
+    buff >> user >> salt >> hash;
+    return {user, salt, hash};
+}
+
+void approveAll(File& p_pending, File& p_approved)
+{
+    p_approved.set(p_pending.get());
+    p_pending.remove();
+}
+
+#define IS_ALFANUM(param) do { \
+    auto l_param = (param); \
+    for(auto c : l_param) { \
+        IS_TRUE(std::isalnum(c)); \
+    }} while(false)
+
+TEST(AuthenticatorWithStorage_registerUser)
+{
+    std::filesystem::path localDir(".");
+    Chatter::AuthenticatorWithStorage auth(localDir);
+
+    IS_TRUE(auth.addUser("User1", "Pass1"));
+
+    File pendingUsers(localDir / "pendingUsers.txt");
+    auto lines = pendingUsers.get();
+    IS_EQ(1, lines.size());
+    const auto [user, salt, hash] = splitLine(lines.at(0));
+    IS_EQ("User1", user);
+    IS_ALFANUM(salt);
+    IS_ALFANUM(hash);
+}
+
+TEST(AuthenticatorWithStorage_samePasswordWillHaveDifferentSaltAndHash)
+{
+    std::filesystem::path localDir(".");
+    Chatter::AuthenticatorWithStorage auth(localDir);
+
+    auth.addUser("User1", "Pass1");
+    auth.addUser("User2", "Pass1");
+
+    File pendingUsers(localDir / "pendingUsers.txt");
+    auto lines = pendingUsers.get();
+    IS_EQ(2, lines.size());
+    const auto [user1, salt1, hash1] = splitLine(lines.at(0));
+    const auto [user2, salt2, hash2] = splitLine(lines.at(1));
+    IS_EQ("User1", user1);
+    IS_EQ("User2", user2);
+    IS_NOT_EQ(salt1, salt2);
+    IS_NOT_EQ(hash1, hash2);
+}
+
+TEST(AuthenticatorWithStorage_willNotRegisterSameUserTwice)
+{
+    std::filesystem::path localDir(".");
+    Chatter::AuthenticatorWithStorage auth(localDir);
+
+    IS_TRUE(auth.addUser("User1", "Pass1"));
+    File pendingUsers(localDir / "pendingUsers.txt");
+    auto linesAfterFirstAdd = pendingUsers.get();
+
+    IS_FALSE(auth.addUser("User1", "Pass2"));
+    auto linesAfterSecondAdd = pendingUsers.get();
+    IS_EQ(1, linesAfterSecondAdd.size());
+    IS_EQ(linesAfterFirstAdd.at(0), linesAfterSecondAdd.at(0));
+}
+
+TEST(AuthenticatorWithStorage_addRemovedUser)
+{
+    std::filesystem::path localDir(".");
+    Chatter::AuthenticatorWithStorage auth(localDir);
+    File pendingUsers(localDir / "pendingUsers.txt");
+
+    auth.addUser("User1", "Pass1");
+    auto lines = pendingUsers.get();
+    const auto [user1, salt1, hash1] = splitLine(lines.at(0));
+
+    auth.removeUser("User1");
+    IS_TRUE(auth.addUser("User1", "Pass2"));
+    lines = pendingUsers.get();
+    IS_EQ(1, lines.size());
+    const auto [user2, salt2, hash2] = splitLine(lines.at(0));
+    IS_EQ("User1", user2);
+    IS_NOT_EQ(salt1, salt2);
+    IS_NOT_EQ(hash1, hash2);
+}
+
+TEST(AuthenticatorWithStorage_addApprovedUserWillFail)
+{
+    std::filesystem::path localDir(".");
+    Chatter::AuthenticatorWithStorage auth(localDir);
+    File pendingUsers(localDir / "pendingUsers.txt");
+    File approvedUsers(localDir / "users.txt");
+
+    auth.addUser("User", "Pass");
+    approveAll(pendingUsers, approvedUsers);
+    IS_FALSE(auth.addUser("User", "Pass1"));
+}
+
+TEST(AuthenticatorWithStorage_addAgainRemovedApprovedUser)
+{
+    std::filesystem::path localDir(".");
+    Chatter::AuthenticatorWithStorage auth(localDir);
+    File pendingUsers(localDir / "pendingUsers.txt");
+    File approvedUsers(localDir / "users.txt");
+
+    auth.addUser("User", "Pass");
+    approveAll(pendingUsers, approvedUsers);
+    auth.removeUser("User");
+    IS_TRUE(auth.addUser("User", "Pass1"));
+}
+
+TEST(AuthenticatorWithStorage_authenticateUnknowUserWillFail)
+{
+    std::filesystem::path localDir(".");
+    Chatter::AuthenticatorWithStorage auth(localDir);
+
+    IS_FALSE(auth.authenticate("User", "Pass"));
+}
+
+TEST(AuthenticatorWithStorage_authenticateNotAprrovedUserWillFail)
+{
+    std::filesystem::path localDir(".");
+    Chatter::AuthenticatorWithStorage auth(localDir);
+    File pendingUsers(localDir / "pendingUsers.txt");
+    File approvedUsers(localDir / "users.txt");
+
+    auth.addUser("User", "Pass");
+    IS_FALSE(auth.authenticate("User", "Pass"));
+}
+
+TEST(AuthenticatorWithStorage_authenticateApprovedUser)
+{
+    std::filesystem::path localDir(".");
+    Chatter::AuthenticatorWithStorage auth(localDir);
+    File pendingUsers(localDir / "pendingUsers.txt");
+    File approvedUsers(localDir / "users.txt");
+
+    auth.addUser("User", "Pass");
+    approveAll(pendingUsers, approvedUsers);
+    IS_TRUE(auth.authenticate("User", "Pass"));
+}
+
+TEST(AuthenticatorWithStorage_authenticationWithWrongPasswordWillFail)
+{
+    std::filesystem::path localDir(".");
+    Chatter::AuthenticatorWithStorage auth(localDir);
+    File pendingUsers(localDir / "pendingUsers.txt");
+    File approvedUsers(localDir / "users.txt");
+
+    auth.addUser("User", "Pass");
+    approveAll(pendingUsers, approvedUsers);
+    IS_FALSE(auth.authenticate("User", "Pass1"));
+}
+
+TEST(AuthenticatorWithStorage_authenticateUserWithNewPassword)
+{
+    std::filesystem::path localDir(".");
+    Chatter::AuthenticatorWithStorage auth(localDir);
+    File pendingUsers(localDir / "pendingUsers.txt");
+    File approvedUsers(localDir / "users.txt");
+
+    auth.addUser("User", "Pass");
+    approveAll(pendingUsers, approvedUsers);
+    auth.removeUser("User");
+    auth.addUser("User", "Pass1");
+    approveAll(pendingUsers, approvedUsers);
+    IS_TRUE(auth.authenticate("User", "Pass1"));
+}
+
 TEST(registerUserSecondTimeWillFail)
 {
     ExchangeData data;
@@ -592,6 +808,17 @@ int main()
     RUN_TEST(willNotAllowDifferentUserWithSamePassword);
     RUN_TEST(willNotAddUserTwice);
     RUN_TEST(changeUserPassword);
+    RUN_TEST(AuthenticatorWithStorage_registerUser);
+    RUN_TEST(AuthenticatorWithStorage_samePasswordWillHaveDifferentSaltAndHash);
+    RUN_TEST(AuthenticatorWithStorage_willNotRegisterSameUserTwice);
+    RUN_TEST(AuthenticatorWithStorage_addRemovedUser);
+    RUN_TEST(AuthenticatorWithStorage_addApprovedUserWillFail);
+    RUN_TEST(AuthenticatorWithStorage_addAgainRemovedApprovedUser);
+    RUN_TEST(AuthenticatorWithStorage_authenticateUnknowUserWillFail);
+    RUN_TEST(AuthenticatorWithStorage_authenticateNotAprrovedUserWillFail);
+    RUN_TEST(AuthenticatorWithStorage_authenticateApprovedUser);
+    RUN_TEST(AuthenticatorWithStorage_authenticationWithWrongPasswordWillFail);
+    RUN_TEST(AuthenticatorWithStorage_authenticateUserWithNewPassword);
 
     RUN_TEST(registerUserSecondTimeWillFail);
     RUN_TEST(loginUnregisteredUserWillFail);
