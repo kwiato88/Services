@@ -106,12 +106,6 @@ bool Server::isLogged(const Cookie& p_cookie) const
     return loggedUsers.find(p_cookie) != loggedUsers.end();
 }
 
-bool Server::isLogged(const std::string& p_userName) const
-{
-    auto found = allUsers.find(p_userName);
-    return found != allUsers.end() && found->second->isLogged();
-}
-
 bool Server::isRegistered(const std::string& p_userName) const
 {
     return allUsers.find(p_userName) != allUsers.end();
