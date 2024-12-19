@@ -47,9 +47,10 @@ private:
         User& operator=(User&&) = default;
         bool is(const std::string& p_name) const;
         std::string getName() const;
+        Cookie getCookie() const;
         void online(const std::string& p_host, const std::string& p_port);
         void offline();
-        void login();
+        void login(const Cookie& p_cookie);
         void logout();
         bool isLogged() const;
         Msg::MessageAck::Status message(const Msg::Message& p_message);
@@ -64,7 +65,7 @@ private:
         std::string name;
         std::string host;
         std::string port;
-        bool logged;
+        Cookie cookie;
         SendFunction sendAction;
         std::queue<Msg::Message> bufferedMessages;
         static const std::size_t bufferCapacity = 512;
@@ -74,6 +75,7 @@ private:
     bool isLogged(const Cookie& p_cookie) const;
     bool isLogged(const std::string& p_userName) const;
     bool isRegistered(const std::string& p_userName) const;
+    void logOut(const Cookie& p_cookie);
 
     ConnectionFactory connections;
     CookieStore cookies;

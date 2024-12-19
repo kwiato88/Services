@@ -8,7 +8,7 @@ namespace Chatter
 {
 
 Server::User::User(ConnectionFactory p_connections, const std::string& p_name)
-    : connections(p_connections), name(p_name), logged(false), sendAction(&User::bufferMsg)
+    : connections(p_connections), name(p_name), sendAction(&User::bufferMsg)
 {
 }
 
@@ -20,6 +20,11 @@ bool Server::User::is(const std::string& p_name) const
 std::string Server::User::getName() const
 {
     return name;
+}
+
+Cookie Server::User::getCookie() const
+{
+    return cookie;
 }
 
 void Server::User::sendBufferedMessages()
@@ -46,19 +51,19 @@ void Server::User::offline()
     sendAction = &User::bufferMsg;
 }
 
-void Server::User::login()
+void Server::User::login(const Cookie& p_cookie)
 {
-    logged = true;
+    cookie = p_cookie;
 }
 
 void Server::User::logout()
 {
-    logged = false;
+    cookie = Cookie{};
 }
 
 bool Server::User::isLogged() const
 {
-    return logged;
+    return cookie != Cookie{};
 }
 
 Msg::MessageAck::Status Server::User::sendMsg(const Msg::Message& p_message)
@@ -147,17 +152,17 @@ try
     {
         return Msg::Cookie{""};
     }
-    if(isLogged(p_msg.userName))
-    {
-        return Msg::Cookie{"0"};
-    }
     auto user = allUsers.find(p_msg.userName);
     if(user == allUsers.end())
     {
         return Msg::Cookie{""};
     }
+    if(user->second->isLogged())
+    {
+        logOut(user->second->getCookie());
+    }
     auto cookie = cookies.allocateCookie();
-    user->second->login();
+    user->second->login(cookie);
     loggedUsers[cookie] = user->second;
     return Msg::Cookie{ cookie.toString() };
 }
@@ -166,17 +171,21 @@ catch(std::exception&)
     return Msg::Cookie{""};
 }
 
+void Server::logOut(const Cookie& p_cookie)
+{
+    auto user = loggedUsers.find(p_cookie);
+    if(user != loggedUsers.end())
+    {
+        user->second->offline();
+        user->second->logout();
+        loggedUsers.erase(user);
+        cookies.releaseCookie(p_cookie);
+    }
+}
+
 void Server::handle(const Msg::Logout& p_msg)
 {
-    auto it = loggedUsers.find(Cookie{p_msg.cookie});
-    if(it == loggedUsers.end())
-    {
-        return;
-    }
-    it->second->offline();
-    it->second->logout();
-    loggedUsers.erase(it);
-    cookies.releaseCookie(Cookie{p_msg.cookie});
+    logOut(Cookie{p_msg.cookie});
 }
 
 Msg::Result Server::handle(const Msg::OnLine& p_msg)

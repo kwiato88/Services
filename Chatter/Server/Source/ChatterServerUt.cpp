@@ -521,7 +521,7 @@ TEST(Server_loginRegisteredUserWillReturnCookie)
     users.wasAuthenticated("MyUser", "Pass");
 }
 
-TEST(Server_loginSecondTimeWillFail)
+TEST(Server_loginSecondTimeWillAllocateNewCookie)
 {
     ExchangeData data;
     Users users;
@@ -530,8 +530,10 @@ TEST(Server_loginSecondTimeWillFail)
     users.willBeRegistered("MyUser", "Pass");
     chatter.handle(Chatter::Msg::Register{"MyUser", "Pass"});
     users.willBeAllowed("MyUser", "Pass");
-    chatter.handle(Chatter::Msg::Login{"MyUser", "Pass"});
-    IS_EQ("0", chatter.handle(Chatter::Msg::Login{"MyUser", "Pass"}).cookie);
+    auto firstCookie = chatter.handle(Chatter::Msg::Login{"MyUser", "Pass"}).cookie;
+    auto secondCookie = chatter.handle(Chatter::Msg::Login{"MyUser", "Pass"}).cookie;
+    IS_FALSE(secondCookie.empty());
+    IS_NOT_EQ(firstCookie, secondCookie);
 }
 
 TEST(Server_loginAfyerLogoutWillReturnCookie)
@@ -823,7 +825,7 @@ int main()
     RUN_TEST(Server_loginUnregisteredUserWillFail);
     RUN_TEST(Server_logInWillFailWhenUserIsNotAuthenticated);
     RUN_TEST(Server_loginRegisteredUserWillReturnCookie);
-    RUN_TEST(Server_loginSecondTimeWillFail);
+    RUN_TEST(Server_loginSecondTimeWillAllocateNewCookie);
     RUN_TEST(Server_loginAfyerLogoutWillReturnCookie);
     RUN_TEST(Server_registerUnregisteredUser);
     RUN_TEST(Server_onlineWillReturnTrue);
