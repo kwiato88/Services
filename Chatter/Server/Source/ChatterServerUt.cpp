@@ -842,6 +842,6 @@ int main()
     RUN_TEST(Server_sendMessageToNewAddr);
     RUN_TEST(Server_sendBufferedMessages);
     RUN_TEST(Server_sendMessageWithSpecialChars);
-    
+
     MAIN_END;
 }

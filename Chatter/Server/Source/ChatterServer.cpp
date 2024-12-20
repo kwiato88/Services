@@ -205,15 +205,16 @@ void Server::handle(const Msg::OffLine& p_msg)
 
 Msg::MessageAck Server::handle(const Msg::Message& p_msg)
 {
-    if(!isLogged(Cookie{ p_msg.from }) || !isRegistered(p_msg.to))
+    decltype(loggedUsers)::iterator sender;
+    decltype(allUsers)::iterator receiver;
+    if ((sender = loggedUsers.find(Cookie{p_msg.from})) == loggedUsers.end()
+     || (receiver = allUsers.find(p_msg.to)) == allUsers.end())
     {
         return Msg::MessageAck{Msg::MessageAck::Status::UnknownUser};
     }
-    auto receiver = allUsers[p_msg.to];
-    auto sender = loggedUsers[Cookie{p_msg.from}];
     auto message = p_msg;
-    message.from = sender->getName();
-    return Msg::MessageAck{ receiver->message(message) };
+    message.from = sender->second->getName();
+    return Msg::MessageAck{ receiver->second->message(message) };
 }
 
 } // namespace Chatter
