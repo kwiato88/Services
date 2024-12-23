@@ -18,6 +18,8 @@ std::string toString(ID p_id)
     case ID::Message: return "Message";
     case ID::MessageAck: return "MessageAck";
     case ID::Stop: return "Stop";
+    case ID::Login: return "Login";
+    case ID::Logout: return "Logout";
     case ID::Dummy: return "Dummy";
     default: throw std::runtime_error("Invalid ID");
     }
@@ -44,6 +46,10 @@ ID idFromString(const std::string& p_id)
         return ID::MessageAck;
     if (p_id == "Stop")
         return ID::Stop;
+    if (p_id == "Login")
+        return ID::Login;
+    if (p_id == "Logout")
+        return ID::Logout;
     if (p_id == "Dummy")
         return ID::Dummy;
     throw std::runtime_error(std::string("Invalid ID: ") + p_id);

@@ -144,29 +144,19 @@ ClientApp::ClientApp(const std::string& p_name, const std::string& p_cookie, std
 }
 
 bool ClientApp::registerAtServer(const std::string& p_name, const std::string& p_password)
-try
 {
     Networking::ServiceProviderClient addrs;
     auto serverAddr = addrs.getServiceAddr("ChatterService");
     auto server = Client{msg::Client([=]() { return std::make_unique<msg::TcpIpConnection>(serverAddr.host, serverAddr.port); })};
     return server.sendReq<Msg::Register, Msg::Result>(Msg::Register{p_name, p_password}).success;
 }
-catch(std::exception&)
-{
-    return false;
-}
 
 std::string ClientApp::logIn(const std::string& p_name, const std::string& p_password)
-try
 {
     Networking::ServiceProviderClient addrs;
     auto serverAddr = addrs.getServiceAddr("ChatterService");
     auto server = Client{msg::Client([=]() { return std::make_unique<msg::TcpIpConnection>(serverAddr.host, serverAddr.port); })};
     return server.sendReq<Msg::Login, Msg::Cookie>(Msg::Login{p_name, p_password}).cookie;
-}
-catch(std::exception&)
-{
-    return "";
 }
 
 void ClientApp::logOut(const std::string& p_cookie)
