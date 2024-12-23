@@ -19,9 +19,10 @@ void errorMessage(Handle p_parent, const std::string& p_msg)
     .show();
 }
 
-ChatterClientDialog::ChatterClientDialog(InstanceHandle p_hInstance, Handle p_parentWindow, const std::string& p_userName)
+ChatterClientDialog::ChatterClientDialog(InstanceHandle p_hInstance, Handle p_parentWindow,
+    const std::string& p_userName, const std::string& p_cookie)
     : Dialog(p_hInstance, p_parentWindow, ResourceId(ID_CHATTER_CLIENT_DIALOG)),
-      chatter(p_userName, std::bind(&ChatterClientDialog::notifyMessageReceived, this)), name(p_userName)
+      chatter(p_userName, p_cookie, std::bind(&ChatterClientDialog::notifyMessageReceived, this)), name(p_userName)
 {
     registerHandler(MsgMatchers::ButtonClick(ID_BUTTON_SEND), std::bind(&ChatterClientDialog::onSendClick, this));
     registerHandler(MsgMatchers::ButtonClick(ID_BUTTON_ADD), std::bind(&ChatterClientDialog::onAddChatClick, this));

@@ -134,24 +134,51 @@ void ClientApp::Receiver::receiverMain()
     receiver.start();
 }
 
-ClientApp::ClientApp(const std::string& p_name, std::function<void()> p_onMessageReceived)
- : name(p_name), receiverServiceName(p_name + "@Chatter"),
+ClientApp::ClientApp(const std::string& p_name, const std::string& p_cookie, std::function<void()> p_onMessageReceived)
+ : name(p_name), cookie(p_cookie), receiverServiceName(p_name + "@Chatter"),
    server(msg::Client([]() { return std::make_unique<msg::TcpIpConnection>("host", "port"); })),
    activeChat(0), onMessageReceived(p_onMessageReceived)
 {
     serverAddr = addrs.getServiceAddr("ChatterService");
     server = Client{msg::Client([=]() { return std::make_unique<msg::TcpIpConnection>(serverAddr.host, serverAddr.port); })};
-    registerAtServer();
 }
 
-void ClientApp::registerAtServer()
+bool ClientApp::registerAtServer(const std::string& p_name, const std::string& p_password)
+try
 {
-    cookie = server.sendReq<Msg::Register, Msg::Cookie>(Msg::Register{name}).cookie;
-    if(cookie.empty())
-    {
-        throw std::runtime_error("Failed to register with ChatterServer");
-    }
+    Networking::ServiceProviderClient addrs;
+    auto serverAddr = addrs.getServiceAddr("ChatterService");
+    auto server = Client{msg::Client([=]() { return std::make_unique<msg::TcpIpConnection>(serverAddr.host, serverAddr.port); })};
+    return server.sendReq<Msg::Register, Msg::Result>(Msg::Register{p_name, p_password}).success;
 }
+catch(std::exception&)
+{
+    return false;
+}
+
+std::string ClientApp::logIn(const std::string& p_name, const std::string& p_password)
+try
+{
+    Networking::ServiceProviderClient addrs;
+    auto serverAddr = addrs.getServiceAddr("ChatterService");
+    auto server = Client{msg::Client([=]() { return std::make_unique<msg::TcpIpConnection>(serverAddr.host, serverAddr.port); })};
+    return server.sendReq<Msg::Login, Msg::Cookie>(Msg::Login{p_name, p_password}).cookie;
+}
+catch(std::exception&)
+{
+    return "";
+}
+
+void ClientApp::logOut(const std::string& p_cookie)
+try
+{
+    Networking::ServiceProviderClient addrs;
+    auto serverAddr = addrs.getServiceAddr("ChatterService");
+    auto server = Client{msg::Client([=]() { return std::make_unique<msg::TcpIpConnection>(serverAddr.host, serverAddr.port); })};
+    server.sendInd<Msg::Logout>(Msg::Logout{p_cookie});
+}
+catch (std::exception&)
+{}
 
 std::string ClientApp::goOnLine()
 {
@@ -185,7 +212,6 @@ catch(std::exception&)
 ClientApp::~ClientApp()
 {
     goOffLine();
-    unregisterAtServer();
 }
 
 ClientApp::Chat::Chat(const std::string& p_withUser)

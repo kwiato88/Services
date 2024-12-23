@@ -15,7 +15,7 @@ namespace Chatter
 class ClientApp
 {
 public:
-    ClientApp(const std::string& p_name, std::function<void()> p_onMessageReceived);
+    ClientApp(const std::string& p_name, const std::string& p_cookie, std::function<void()> p_onMessageReceived);
     ~ClientApp();
     std::string goOnLine();
     void goOffLine();
@@ -28,6 +28,10 @@ public:
     std::size_t newChat(const std::string& p_name);
     void removeChat(std::size_t p_idx);
     void receivedMessage(const Msg::Message& p_message);
+
+    static bool registerAtServer(const std::string& p_name, const std::string& p_password);
+    static std::string logIn(const std::string& p_name, const std::string& p_password);
+    static void logOut(const std::string& p_cookie);
 
 private:
     using Client = Networking::ClientWithCodec<::Chatter::Msg::Json::Codec>;
@@ -72,7 +76,6 @@ private:
         std::size_t unreadCount;
     };
 
-    void registerAtServer();
     void unregisterAtServer();
     std::size_t findChatWith(const std::string& p_name) const;
     void sendToServer(const std::string& p_message);

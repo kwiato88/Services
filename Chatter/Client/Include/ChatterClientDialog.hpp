@@ -13,7 +13,8 @@ namespace WinApi
 class ChatterClientDialog : public Dialog
 {
 public:
-    ChatterClientDialog(InstanceHandle p_hInstance, Handle p_parentWindow, const std::string& p_userName);
+    ChatterClientDialog(InstanceHandle p_hInstance, Handle p_parentWindow,
+        const std::string& p_userName, const std::string& p_cookie);
 private:
     void onInit() override;
     void onSendClick();
