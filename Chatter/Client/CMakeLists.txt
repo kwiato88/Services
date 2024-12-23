@@ -60,7 +60,11 @@ add_executable(
     ChatterClientApp
     Source/ChatterClientMain.cpp
     Source/ChatterClientDialog.cpp
+    Source/ChatterRegisterDialog.cpp
+    Source/ChatterLoginDialog.cpp
     Resource/ChatterClientDialog.rc
+    Resource/ChatterRegisterDialog.rc
+    Resource/ChatterLoginDialog.rc
     ../../WinApi/Resource/QueryDialog.rc
 )
 

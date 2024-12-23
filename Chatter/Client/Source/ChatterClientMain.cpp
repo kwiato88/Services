@@ -3,6 +3,8 @@
 #include <SockSocketUtils.hpp>
 #include "ChatterClientDialog.hpp"
 #include "MessageDialog.hpp"
+#include "ChatterLoginDialog.hpp"
+#include "ChatterRegisterDialog.hpp"
 
 WinApi::InstanceHandle hModule;
 
@@ -27,8 +29,13 @@ public:
     }
     void registerUser()
     {
-        //TODO: query for user name and password
-        std::string password;
+        WinApi::RegisterDialog dlg{hModule, WinApi::Handle(0)};
+        if(dlg.show() == WinApi::Dialog::RESULT_CANCEL)
+        {
+            throw std::runtime_error("No credentials provided");
+        }
+        std::string password = dlg.getPass();
+        user = dlg.getName();
         std::cout << "Chatter: register " << user << std::endl;
         if(!Chatter::ClientApp::registerAtServer(user, password))
         {
@@ -49,8 +56,13 @@ public:
     }
     void logIn()
     {
-        //TODO: query for user name and password
-        std::string password;
+        WinApi::LoginDialog dlg{hModule, WinApi::Handle(0)};
+        if(dlg.show() == WinApi::Dialog::RESULT_CANCEL)
+        {
+            throw std::runtime_error("No credentials provided");
+        }
+        std::string password = dlg.getPass();
+        user = dlg.getName();
         std::cout << "Chatter: login " << user << std::endl;
         cookie = Chatter::ClientApp::logIn(user, password);
         if(cookie.empty())
