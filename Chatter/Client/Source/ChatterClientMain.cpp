@@ -94,7 +94,7 @@ int main(int argc, char* argv[])
     SockEnv sockEnv;
     try
     {
-        if (argc == 2 && argv[1] == "register")
+        if (argc == 2 && std::strcmp(argv[1], "register") == 0)
         {
             App client;
             client.registerUser();
