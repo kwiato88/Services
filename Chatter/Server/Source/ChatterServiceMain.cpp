@@ -1,8 +1,18 @@
 #include <iostream>
 #include <stdexcept>
 #include <filesystem>
+#include <memory>
+#include <csignal>
 #include "ChatterService.hpp"
 #include "SockSocketUtils.hpp"
+
+std::unique_ptr<Chatter::Service> g_chatter;
+
+void stopServer(int)
+{
+    std::cout << "Chatter: stop server" << std::endl;
+    g_chatter.reset();
+}
 
 int main()
 {
@@ -10,10 +20,12 @@ int main()
     {
         sock::init();
         {
+            std::signal(SIGINT, stopServer);
             std::cout << "Chatter: create service" << std::endl;
-            Chatter::Service chatter(std::filesystem::path("."));
-            chatter.start();
+            g_chatter = std::make_unique<Chatter::Service>(std::filesystem::path("."));
+            g_chatter->start();
             std::cout << "Chatter: service finished" << std::endl;
+            g_chatter.reset();
         }
         sock::cleanup();
         return 0;
