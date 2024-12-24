@@ -28,6 +28,15 @@ public:
     }
 };
 
+struct LogMessage : public msg::Handler
+{
+    std::string handle(const std::string& p_req) override
+    {
+        std::cout << "Chatter: dropped message [" << p_req << "]" << std::endl;
+        return "";
+    }
+};
+
 Service::Service(const std::filesystem::path& p_configDir)
     : BaseService(std::bind(&Service::createServer, this)),
       chatter(std::make_shared<Server>(
@@ -37,10 +46,13 @@ Service::Service(const std::filesystem::path& p_configDir)
     setup();
     add<Msg::Register, Msg::Result>();
     add<Msg::UnRegister>();
+    add<Msg::Login, Msg::Cookie>();
+    add<Msg::Logout>();
     add<Msg::OnLine, Msg::Result>();
     add<Msg::OffLine>();
     add<Msg::Message, Msg::MessageAck>();
     addHandler<Msg::Stop>(Msg::Stop::id, std::make_shared<StopHandler<Msg::Stop> >(*this));
+    setDefaultHandler(std::make_shared<LogMessage>());
 }
 
 void Service::setup()

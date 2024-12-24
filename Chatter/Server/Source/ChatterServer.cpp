@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <iostream>
 #include "ChatterServer.hpp"
 #include "ChatterCodec.hpp"
 #include "ClientWithCodec.hpp"
@@ -72,8 +73,9 @@ try{
     client.sendInd(p_message);
     return Msg::MessageAck::Status::Sent;
 }
-catch(std::exception&)
+catch(std::exception& e)
 {
+    std::cerr << "Chatter: Failed to send message from " << name << " to " << p_message.to << ". " << e.what() << std::endl;
     return Msg::MessageAck::Status::Failed;
 }
 
@@ -160,8 +162,9 @@ try
     loggedUsers[cookie] = user->second;
     return Msg::Cookie{ cookie.toString() };
 }
-catch(std::exception&)
+catch(std::exception& e)
 {
+    std::cerr << "Chatter: Failed to authenticate user: " << p_msg.userName << ". " << e.what() << std::endl;
     return Msg::Cookie{""};
 }
 
